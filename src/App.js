@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import Board from './Board';
 import styled from 'styled-components';
 
