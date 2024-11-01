@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Board from './Board';
+import Board from '../Board';
 import styled from 'styled-components';
 
 const StyledApp = styled.main`
