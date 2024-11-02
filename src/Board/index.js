@@ -1,13 +1,12 @@
 import React from "react";
 import axios from 'axios';
-//import "@fontsource/karla";
 
 let colorCard = "#f9fdf7";
 
 const columnList = [
-  { name: "EN PROGRESO", stage: 1, color: "#F8CC8A" },
-  { name: "COMPLETADO", stage: 2, color: "#2B29CC" },
-  { name: "CANCELADO", stage: 3, color: "#FF6B6B" }
+  { name: "POR HACER", stage: 1, color: "#F8CC8A" },
+  { name: "EN PROGRESO", stage: 2, color: "#2B29CC" },
+  { name: "FINALIZADO", stage: 3, color: "#FF6B6B" }
 ];
 
 export default class IBoard extends React.Component {
@@ -47,11 +46,11 @@ export default class IBoard extends React.Component {
 
   getStatus(status) {
     switch (status) {
-      case "Pendiente":
+      case "Por Hacer":
         return 1;
-      case "Finalizado":
+      case "En Progreso":
         return 2;
-      case "Cancelado":
+      case "Finalizado":
         return 3;
       default:
         return 1;
@@ -84,13 +83,13 @@ export default class IBoard extends React.Component {
   getStatusLabel(status) {
     switch (status) {
       case 1:
-        return "Pendiente";
+        return "Por Hacer";
       case 2:
-        return "Finalizado";
+        return "En Progreso";
       case 3:
-        return "Cancelado";
+        return "Finalizado";
       default:
-        return "Pendiente";
+        return "Por Hacer";
     }
   }
 
@@ -101,7 +100,7 @@ export default class IBoard extends React.Component {
 
     return (
       <div>
-        <div>
+        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
           {this.columns.map((column) => (
             <KanbanColumn
               name={column.name}
@@ -142,24 +141,21 @@ class KanbanColumn extends React.Component {
         style={{
           display: 'inline-block',
           verticalAlign: 'top',
-          marginRight: '5px',
-          marginBottom: '5px',
-          paddingLeft: '5px',
-          paddingTop: '0px',
-          width: '12.5em',
-          height: '35em',
+          margin: '0 8px',
+          padding: '10px',
+          width: '14em',
+          height: '40em',
           textAlign: 'center',
-          backgroundColor: this.state.mouseIsHovering ? '#d3d3d3' : this.props.color,
-          borderRadius: '8px',
-          borderStyle: 'solid',
-          borderWidth: 'medium'
+          backgroundColor: this.props.color,
+          borderRadius: '10px',
+          border: '2px solid #ccc',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
         }}
         onDragEnter={(e) => { this.setState({ mouseIsHovering: true }); this.props.onDragEnter(e, this.props.stage); }}
-        onDragExit={(e) => {this.setState({ mouseIsHovering: false }); e.preventDefault(); }}
+        onDragExit={(e) => { this.setState({ mouseIsHovering: false }); e.preventDefault(); }}
       >
-        <h4>{this.props.name}</h4>
+        <h4 style={{ color: '#333', fontSize: '1.2em', fontWeight: 'bold' }}>{this.props.name}</h4>
         {this.generateKanbanCards()}
-        <br />
       </div>
     );
   }
@@ -183,21 +179,25 @@ class KanbanCard extends React.Component {
     return (
       <div
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.2)",
-          backdropFilter: "blur(10px)",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
           padding: '1em',
           margin: '0.5em 0',
-          borderRadius: '5px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-          cursor: 'pointer'
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          cursor: 'pointer',
+          border: '1px solid #ddd'
         }}
         draggable
         onDragEnd={this.handleDragEnd}
         onClick={this.toggleCollapse}
       >
-        <strong>{this.props.project.name}</strong>
-        <p>{this.state.collapsed ? '' : this.props.fecha}</p>
-        <p>{this.state.collapsed ? '' : this.props.project.description}</p>
+        <strong style={{ fontSize: '1em', color: '#333' }}>{this.props.project.name}</strong>
+        {!this.state.collapsed && (
+          <>
+            <p style={{ color: '#777', fontSize: '0.9em' }}>{this.props.fecha}</p>
+            <p style={{ color: '#555', fontSize: '0.85em' }}>{this.props.project.description}</p>
+          </>
+        )}
       </div>
     );
   }
