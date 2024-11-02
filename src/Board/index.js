@@ -1,13 +1,12 @@
 import React from "react";
 import axios from 'axios';
-//import "@fontsource/karla";
 
 let colorCard = "#f9fdf7";
 
 const columnList = [
-  { name: "EN PROGRESO", stage: 1, color: "#F8CC8A" },
-  { name: "COMPLETADO", stage: 2, color: "#2B29CC" },
-  { name: "CANCELADO", stage: 3, color: "#FF6B6B" }
+  { name: "POR HACER", stage: 1, color: "#F8CC8A" },
+  { name: "EN PROGRESO", stage: 2, color: "#2B29CC" },
+  { name: "FINALIZADO", stage: 3, color: "#FF6B6B" }
 ];
 
 export default class IBoard extends React.Component {
@@ -17,7 +16,8 @@ export default class IBoard extends React.Component {
       isLoading: false,
       projects: [],
       data: [],
-      draggedOverCol: 0
+      draggedOverCol: 0,
+      selectedProject: null // Estado para la tarjeta seleccionada
     };
 
     this.handleOnDragEnter = this.handleOnDragEnter.bind(this);
@@ -25,33 +25,44 @@ export default class IBoard extends React.Component {
     this.columns = columnList;
   }
 
+  convertirFechaHora(fechaOriginal) {
+    const fecha = new Date(fechaOriginal);
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const día = String(fecha.getDate()).padStart(2, '0');
+    const hora = String(fecha.getHours()).padStart(2, '0');
+    const minutos = String(fecha.getMinutes()).padStart(2, '0');
+    const segundos = String(fecha.getSeconds()).padStart(2, '0');
+    return `${año}-${mes}-${día} ${hora}:${minutos}:${segundos}`;
+  }
+
   ingresarPizarra() {
     const registros = [];
     for (let i = 0; i < this.state.data.length; i++) {
       const obj = this.state.data[i];
       const item = {};
-
       item.id = parseInt(obj.id);
       item.priority = 1;
-      item.name = `${obj.nombre} ${obj.apellido}`.toUpperCase();
-      item.date = obj.fecha;
+      item.name = `${obj.nombre} ${obj.apellido}`.toUpperCase() + " " + this.convertirFechaHora(obj.fecha);
+      item.date = this.convertirFechaHora(obj.fecha);
       item.description = JSON.stringify({ pregunta: obj.consulta, respuesta: obj.respuesta });
       item.status = this.getStatus(obj.feedback);
+      item.numero = obj.numero;
+      item.consulta = obj.consulta;
+      item.respuesta = obj.respuesta;
       item.color = colorCard;
-
       registros.push(item);
     }
-    console.log(registros);
     this.setState({ projects: registros, isLoading: false });
   }
 
   getStatus(status) {
     switch (status) {
-      case "Pendiente":
+      case "Por Hacer":
         return 1;
-      case "Finalizado":
+      case "En Progreso":
         return 2;
-      case "Cancelado":
+      case "Finalizado":
         return 3;
       default:
         return 1;
@@ -60,12 +71,10 @@ export default class IBoard extends React.Component {
 
   componentDidMount() {
     this.setState({ isLoading: true });
-    console.log("iniciando");
     axios.get("https://sandy-puddle-hydrangea.glitch.me/records")
       .then((response) => {
         const data = response.data;
         this.setState({ data }, () => this.ingresarPizarra());
-        console.log(data);
       })
       .catch((error) => {
         console.error("Error al obtener los datos:", error);
@@ -77,22 +86,17 @@ export default class IBoard extends React.Component {
     e.preventDefault();
   }
 
-  async handleOnDragEnd(e) {
+  handleOnDragEnd(e) {
     e.preventDefault();
   }
 
-  getStatusLabel(status) {
-    switch (status) {
-      case 1:
-        return "Pendiente";
-      case 2:
-        return "Finalizado";
-      case 3:
-        return "Cancelado";
-      default:
-        return "Pendiente";
-    }
-  }
+  openModal = (project) => {
+    this.setState({ selectedProject: project });
+  };
+
+  closeModal = () => {
+    this.setState({ selectedProject: null });
+  };
 
   render() {
     if (this.state.isLoading) {
@@ -100,38 +104,35 @@ export default class IBoard extends React.Component {
     }
 
     return (
-      <div>
-        <div>
-          {this.columns.map((column) => (
-            <KanbanColumn
-              name={column.name}
-              stage={column.stage}
-              color={column.color}
-              projects={this.state.projects.filter((project) => project.status === column.stage)}
-              onDragEnter={this.handleOnDragEnter}
-              onDragEnd={this.handleOnDragEnd}
-              key={column.stage}
-            />
-          ))}
-        </div>
+      <div className="board-container">
+        {this.columns.map((column) => (
+          <KanbanColumn
+            name={column.name}
+            stage={column.stage}
+            color={column.color}
+            projects={this.state.projects.filter((project) => project.status === column.stage)}
+            onDragEnter={this.handleOnDragEnter}
+            onDragEnd={this.handleOnDragEnd}
+            onCardClick={this.openModal} // Pasa la función para abrir el modal
+            key={column.stage}
+          />
+        ))}
+        {this.state.selectedProject && (
+          <Modal project={this.state.selectedProject} onClose={this.closeModal} />
+        )}
       </div>
     );
   }
 }
 
 class KanbanColumn extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { mouseIsHovering: false };
-  }
-
   generateKanbanCards() {
     return this.props.projects.map((project) => (
       <KanbanCard
         project={project}
         key={project.description}
-        fecha={project.date}
         onDragEnd={this.props.onDragEnd}
+        onClick={() => this.props.onCardClick(project)} // Agrega la función para abrir el modal
       />
     ));
   }
@@ -139,23 +140,11 @@ class KanbanColumn extends React.Component {
   render() {
     return (
       <div
+        className="kanban-column"
         style={{
-          display: 'inline-block',
-          verticalAlign: 'top',
-          marginRight: '5px',
-          marginBottom: '5px',
-          paddingLeft: '5px',
-          paddingTop: '0px',
-          width: '12.5em',
-          height: '35em',
-          textAlign: 'center',
-          backgroundColor: this.state.mouseIsHovering ? '#d3d3d3' : this.props.color,
-          borderRadius: '8px',
-          borderStyle: 'solid',
-          borderWidth: 'medium'
+          backgroundColor: this.props.color
         }}
-        onDragEnter={(e) => { this.setState({ mouseIsHovering: true }); this.props.onDragEnter(e, this.props.stage); }}
-        onDragExit={(e) => {this.setState({ mouseIsHovering: false }); e.preventDefault(); }}
+        onDragEnter={(e) => { this.props.onDragEnter(e, this.props.stage); }}
       >
         <h4>{this.props.name}</h4>
         {this.generateKanbanCards()}
@@ -166,39 +155,120 @@ class KanbanColumn extends React.Component {
 }
 
 class KanbanCard extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { collapsed: true };
-  }
-
   handleDragEnd = (e) => {
     e.preventDefault();
-  }
-
-  toggleCollapse = () => {
-    this.setState((prevState) => ({ collapsed: !prevState.collapsed }));
   }
 
   render() {
     return (
       <div
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.2)",
-          backdropFilter: "blur(10px)",
-          padding: '1em',
-          margin: '0.5em 0',
-          borderRadius: '5px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-          cursor: 'pointer'
-        }}
+        className="kanban-card"
         draggable
         onDragEnd={this.handleDragEnd}
-        onClick={this.toggleCollapse}
+        onClick={this.props.onClick} // Agrega el evento onClick para abrir el modal
       >
         <strong>{this.props.project.name}</strong>
-        <p>{this.state.collapsed ? '' : this.props.fecha}</p>
-        <p>{this.state.collapsed ? '' : this.props.project.description}</p>
       </div>
     );
   }
 }
+
+// Componente Modal para mostrar información detallada
+function Modal({ project, onClose }) {
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <button onClick={onClose} className="close-button">&times;</button>
+        <h2>{project.name}</h2>
+        <p><strong>Numero de Contacto: </strong>{project.numero}</p>
+        <p><strong>Fecha:</strong> {project.date}</p>
+        <p><strong>Pregunta:</strong> {project.consulta}</p>
+        <p><strong>Respuesta:</strong> {project.respuesta}</p>
+      </div>
+    </div>
+  );
+}
+
+// CSS para el modal y el tablero responsive
+const styles = `
+.board-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3em;
+  padding: 2em;
+}
+
+.kanban-column {
+  display: inline-block;
+  vertical-align: top;
+  width: 100%;
+  max-width: 18em;
+  height: auto;
+  padding: 1em;
+  text-align: center;
+  border-radius: 8px;
+  border-style: solid;
+  border-width: medium;
+  margin-bottom: 1em;
+}
+
+.kanban-card {
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 1em;
+  margin: 0.5em 0;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 2em;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+@media (min-width: 600px) {
+  .kanban-column {
+    width: 45%;
+  }
+}
+
+@media (min-width: 900px) {
+  .kanban-column {
+    width: 25%;
+  }
+}
+`;
+
+// Insertar estilos en la página
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
