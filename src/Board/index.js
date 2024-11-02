@@ -146,9 +146,8 @@ class KanbanColumn extends React.Component {
         }}
         onDragEnter={(e) => { this.props.onDragEnter(e, this.props.stage); }}
       >
-        <h4>{this.props.name}</h4>
+        <h4 style={{ color: '#333', fontSize: '1.2em', fontWeight: 'bold' }}>{this.props.name}</h4>
         {this.generateKanbanCards()}
-        <br />
       </div>
     );
   }
