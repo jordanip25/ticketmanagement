@@ -1,25 +1,34 @@
-import React from 'react';
-import Board from './Board';
+import React, { useState } from 'react';
 import styled from 'styled-components';
+//import Board from './Board';
+import Dashboard from './Dashboard';
+import Login from './Login';
 
 const StyledApp = styled.main`
-display: flex;
-flex-direction: row;
-flex-wrap: wrap;
-padding: 3em;
-justify-content: space-around;
+  flex-wrap: wrap;
+  justify-content: space-around;
 
   & > div:not(:last-child) {
-    margin-bottom: 2em;
+    margin-bottom: 1em;
   }
-`
+`;
 
 function App() {
-    return ( 
-        <StyledApp>
-        <Board />
-        </StyledApp>
-    );
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    console.log("Usuario autenticado: isLoggedIn = true");
+  };
+
+  console.log("Estado de isLoggedIn:", isLoggedIn);
+
+  return (
+    <StyledApp>
+      {isLoggedIn ? <Dashboard /> : <Login onLoginSuccess={handleLoginSuccess} />}
+    </StyledApp>
+  );
 }
+
 
 export default App;
