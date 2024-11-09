@@ -4,13 +4,15 @@ import styled from 'styled-components';
 import Board from '../Board';
 import Tickets from '../Tickets';
 import Clientes from '../Clientesplus';
+import UserManagement from '../UserManagement';
 
 const MenuContainer = styled.div`
-  width: 200px;
+  width: 15%;
   background-color: #a4a4a4;
   padding: 10px;
   border-right: 1px solid #ddd;
-  height: 35em;
+  height: 100%; /* Asegura que el menú ocupe toda la altura del contenedor */
+  box-sizing: border-box; /* Incluye el padding en el cálculo de la altura */
 `;
 
 const MenuItem = styled.div`
@@ -24,6 +26,7 @@ const MenuItem = styled.div`
 
 const DashboardContainer = styled.div`
   display: flex;
+  height: 100vh; 
 `;
 
 const ContentContainer = styled.div`
@@ -94,7 +97,7 @@ const Dashboard = ({ username }) => {
         {activeMenu === 'Dashboard' && <Board />}
         {activeMenu === 'Tickets' && <Tickets />}
         {activeMenu === 'Clientes' && <Clientes/>}
-        {activeMenu === 'Usuarios' && <div>Contenido de Usuarios</div>}
+        {activeMenu === 'Usuarios' && <UserManagement/> }
         {activeMenu === 'Logout' && <div>Cerrar Sesión</div>}
       </ContentContainer>
     </DashboardContainer>
