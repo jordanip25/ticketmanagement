@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Usamos useHistory para la redirección
 import styled from 'styled-components';
 import Board from '../Board';
+import Tickets from '../Tickets';
+import Clientes from '../Clientesplus';
 
 const MenuContainer = styled.div`
   width: 200px;
@@ -28,34 +31,71 @@ const ContentContainer = styled.div`
   padding: 10px;
 `;
 
-const Dashboard = () => {
+const Dashboard = ({ username }) => {
   const [activeMenu, setActiveMenu] = useState('Board');
+  const [userInfo, setUserInfo] = useState({ nombre: '', apellido: '', rol: '' });
+  const navigate = useNavigate(); // Hook para redirigir
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
   };
 
+  useEffect(() => {
+    // Llama al webhook para obtener el nombre y apellido del usuario
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch('https://sandy-puddle-hydrangea.glitch.me/userinfo/' + username);
+        const data = await response.json();
+        
+        // Supone que el webhook devuelve un objeto con los campos "nombre", "apellido" y "rol"
+        setUserInfo({ nombre: data.nombre, apellido: data.apellido, rol: data.rol });
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
+    };
+
+    fetchUserInfo();
+  }, [username]);
+
+  const logout = () => {
+    console.log("cerrando sesion");
+    // Limpiar la información de sesión, como el token de autenticación
+    localStorage.removeItem('authToken'); // Ejemplo de limpieza del token de autenticación
+    navigate('/'); // Redirige a la página de Login
+  };
+
   return (
     <DashboardContainer>
       <MenuContainer>
-        <MenuItem isActive={activeMenu === 'Board'} onClick={() => handleMenuClick('Board')}>
-          Board
+        <MenuItem>
+          Bienvenido {userInfo.nombre} {userInfo.apellido}
         </MenuItem>
-        <MenuItem isActive={activeMenu === 'Projects'} onClick={() => handleMenuClick('Projects')}>
-          Projects
+        <MenuItem isActive={activeMenu === 'Dashboard'} onClick={() => handleMenuClick('Dashboard')}>
+          Dashboard
         </MenuItem>
-        <MenuItem isActive={activeMenu === 'Tasks'} onClick={() => handleMenuClick('Tasks')}>
-          Tasks
+        <MenuItem isActive={activeMenu === 'Tickets'} onClick={() => handleMenuClick('Tickets')}>
+          Tickets
         </MenuItem>
-        <MenuItem isActive={activeMenu === 'Settings'} onClick={() => handleMenuClick('Settings')}>
-          Settings
+        {userInfo.rol === 'admin' && (
+          <>
+            <MenuItem isActive={activeMenu === 'Clientes'} onClick={() => handleMenuClick('Clientes')}>
+              Clientes+
+            </MenuItem>
+            <MenuItem isActive={activeMenu === 'Usuarios'} onClick={() => handleMenuClick('Usuarios')}>
+              Usuarios
+            </MenuItem>
+          </>
+        )}
+        <MenuItem isActive={activeMenu === 'Logout'} onClick={logout}>
+          Cerrar Sesión
         </MenuItem>
       </MenuContainer>
       <ContentContainer>
-        {activeMenu === 'Board' && <Board />}
-        {activeMenu === 'Projects' && <div>Contenido de Projects</div>}
-        {activeMenu === 'Tasks' && <div>Contenido de Tasks</div>}
-        {activeMenu === 'Settings' && <div>Contenido de Settings</div>}
+        {activeMenu === 'Dashboard' && <Board />}
+        {activeMenu === 'Tickets' && <Tickets />}
+        {activeMenu === 'Clientes' && <Clientes/>}
+        {activeMenu === 'Usuarios' && <div>Contenido de Usuarios</div>}
+        {activeMenu === 'Logout' && <div>Cerrar Sesión</div>}
       </ContentContainer>
     </DashboardContainer>
   );

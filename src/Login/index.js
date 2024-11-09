@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import md5 from 'md5';
-
+import { useNavigate } from 'react-router-dom';
 const LoginContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -96,10 +96,11 @@ const Button = styled.button`
 `;
 
 function Login({ onLoginSuccess }) {
-    const [username, setUsername] = useState('');
-    const [pass, setPassword] = useState('');
-    const [error, setError] = useState('');
-    
+  const [username, setUsername] = useState('');
+  const [pass, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate(); // Usando useNavigate en lugar de useHistory
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     const password = md5(pass);
@@ -110,7 +111,8 @@ function Login({ onLoginSuccess }) {
       });
 
       if (response.status === 200) {
-        onLoginSuccess(); // Ejecuta la función para indicar que el usuario ha iniciado sesión
+        onLoginSuccess(username); // Ejecución de la función en caso de éxito
+        navigate('/dashboard'); // Redirigir al dashboard tras login exitoso
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -125,28 +127,27 @@ function Login({ onLoginSuccess }) {
     <LoginContainer>
       <Card>
       <form onSubmit={handleLogin}>
-        <IconContainer>
+      <IconContainer>
           {/* Aquí podrías agregar un ícono si tienes uno */}
           👤
         </IconContainer>
-        <Title>My Account</Title>
+        <Title>Bienvenido</Title>
         <Input
           type="text"
-          placeholder="Login"
+          placeholder="Usuario"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
         <PasswordContainer>
-          <Input
-            type="password"
-            placeholder="Password"
-            value={pass}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <ToggleSwitch />
+        <Input
+          type="password"
+          value={pass}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Contraseña"
+        />
         </PasswordContainer>
-        <ForgotPassword href="#">Forgot password?</ForgotPassword>
         <Button type="submit">Sign in</Button>
+        {error && <p>{error}</p>}
       </form>
       </Card>
     </LoginContainer>
