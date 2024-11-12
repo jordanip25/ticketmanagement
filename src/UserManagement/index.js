@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import md5 from 'md5';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -7,16 +8,16 @@ const UserManagement = () => {
         id: '',
         username: '',
         password: '',
-        numero: '',
+        telefono: '',
         created_at: '',
-        rol: '',
+        rol: 'User',
         nombre: '',
         apellido: ''
     });
 
     // Fetch users from your API
     const fetchUsers = () => {
-        axios.get('/https://sandy-puddle-hydrangea.glitch.me/allusers')
+        axios.get('https://sandy-puddle-hydrangea.glitch.me/allusers')
             .then(response => setUsers(response.data))
             .catch(error => console.error('Error fetching users:', error));
     };
@@ -33,21 +34,28 @@ const UserManagement = () => {
     // Add or update a user
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (formData.id) {
-            axios.put(`/api/users/${formData.id}`, formData)
-                .then(() => fetchUsers())
-                .catch(error => console.error('Error updating user:', error));
-        } else {
-            axios.post('/api/users', formData)
+
+        // Clone formData without the 'id' and encrypt the password for new users
+        const dataToSend = { ...formData };
+        if (!formData.id) {
+            delete dataToSend.id;
+            delete dataToSend.created_at;
+            dataToSend.password = md5(formData.password).toString();
+            axios.post('https://sandy-puddle-hydrangea.glitch.me/api/users', dataToSend)
                 .then(() => fetchUsers())
                 .catch(error => console.error('Error adding user:', error));
+        } else {
+            dataToSend.password = md5(formData.password).toString();
+            axios.put(`https://sandy-puddle-hydrangea.glitch.me/api/users/${formData.id}`, dataToSend)
+                .then(() => fetchUsers())
+                .catch(error => console.error('Error updating user:', error));
         }
-        setFormData({ id: '', username: '', password: '', numero: '', created_at: '', rol: '', nombre: '', apellido: '' });
+        setFormData({ id: '', username: '', password: '', telefono: '', created_at: '', rol: '', nombre: '', apellido: '' });
     };
 
     // Delete a user
     const deleteUser = (id) => {
-        axios.delete(`/api/users/${id}`)
+        axios.delete(`https://sandy-puddle-hydrangea.glitch.me/api/users/${id}`)
             .then(() => fetchUsers())
             .catch(error => console.error('Error deleting user:', error));
     };
@@ -57,9 +65,12 @@ const UserManagement = () => {
             <h2 style={styles.title}>Gestión de Usuarios</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
                 <input name="username" value={formData.username} onChange={handleChange} placeholder="Username" required style={styles.input} />
-                <input name="password" value={formData.password} onChange={handleChange} placeholder="Password" required type="password" style={styles.input} />
-                <input name="numero" value={formData.numero} onChange={handleChange} placeholder="Número" required style={styles.input} />
-                <input name="rol" value={formData.rol} onChange={handleChange} placeholder="Rol" required style={styles.input} />
+                <input name="password" value={formData.password}  onFocus={() => setFormData({ ...formData, password: '' })} onChange={handleChange} placeholder="Password" required type="password" style={styles.input} />
+                <input name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Número" required style={styles.input} />
+                <select name="rol" value={formData.rol} onChange={handleChange} required style={styles.input}>
+                    <option value="Admin">Admin</option>
+                    <option value="User">User</option>
+                </select>
                 <input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" required style={styles.input} />
                 <input name="apellido" value={formData.apellido} onChange={handleChange} placeholder="Apellido" required style={styles.input} />
                 <button type="submit" style={styles.button}>{formData.id ? "Actualizar" : "Agregar"}</button>
@@ -82,7 +93,7 @@ const UserManagement = () => {
                         <tr key={user.id}>
                             <td>{user.id}</td>
                             <td>{user.username}</td>
-                            <td>{user.numero}</td>
+                            <td>{user.telefono}</td>
                             <td>{user.rol}</td>
                             <td>{user.nombre}</td>
                             <td>{user.apellido}</td>
