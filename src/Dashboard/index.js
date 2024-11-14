@@ -55,6 +55,7 @@ const Dashboard = ({ username }) => {
       } catch (error) {
         console.error('Error fetching user info:', error);
       }
+      setActiveMenu('Dashboard');
     };
 
     fetchUserInfo();
@@ -79,11 +80,14 @@ const Dashboard = ({ username }) => {
         <MenuItem isActive={activeMenu === 'Tickets'} onClick={() => handleMenuClick('Tickets')}>
           Tickets
         </MenuItem>
+
+        <MenuItem isActive={activeMenu === 'Clientes'} onClick={() => handleMenuClick('Clientes')}>
+              Clientes+
+        </MenuItem>
+        
         {userInfo.rol === 'admin' && (
           <>
-            <MenuItem isActive={activeMenu === 'Clientes'} onClick={() => handleMenuClick('Clientes')}>
-              Clientes+
-            </MenuItem>
+            
             <MenuItem isActive={activeMenu === 'Usuarios'} onClick={() => handleMenuClick('Usuarios')}>
               Usuarios
             </MenuItem>

@@ -4,11 +4,11 @@ import styled from 'styled-components';
 const Container = styled.div`
   display: flex;
   justify-content: center;
-  width: 400px;
-  margin: 20px auto;
+  width: 80%;
+  margin: 10px auto;
   background-color: #f0f0f0;
   border-radius: 10px;
-  padding: 20px;
+  padding: 10px;
   flex-direction: column;
 `;
 
@@ -157,9 +157,10 @@ const Clientes = () => {
       <MessageContainer>
         {messages.map((msg, index) => (
           <ChatBubble key={index}>
+            <b>TICKET000{msg.id} - {formatFecha(msg.fecha)}</b>
+            <br/>
             {msg.consulta}
             <br />
-            <b>{formatFecha(msg.fecha)}</b>
           </ChatBubble>
         ))}
         {response && (

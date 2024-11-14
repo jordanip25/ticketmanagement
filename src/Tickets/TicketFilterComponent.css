@@ -71,15 +71,23 @@
     background-color: #6c757d;
   }
   
-  .status-badge.en-proceso {
-    background-color: #17a2b8;
+  .status-badge.enproceso {
+    background-color: #fff12f;
   }
   
   .status-badge.asignado {
-    background-color: #ffc107;
+    background-color: #757575;
   }
   
-  .status-badge.esperando {
-    background-color: #dc3545;
+  .status-badge.pendiente {
+    background-color: #757575;
+  }
+
+  .status-badge.finalizado {
+    background-color: #11c02e;
+  }
+
+  .status-badge.cancelado {
+    background-color: #c71010;
   }
   

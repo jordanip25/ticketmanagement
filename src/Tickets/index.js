@@ -1,19 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch, FaCalendarAlt, FaFileExcel } from 'react-icons/fa';
 import './TicketFilterComponent.css'; // Archivo CSS para los estilos
-
-const ticketsData = [
-  {
-    codigo: "AJUT-2024-95103",
-    titulo: "ALERTA DE ESPACIO EN DISCO - SVBWSTSAPP01",
-    subtipo: "NINSURG",
-    solicitante: "TACUCHE MELENDEZ CARLOS ALFREDO",
-    asignadoA: "VILLAFLORES CASAS DAVID ALLAN",
-    fechaCreacion: "29/10/2024",
-    estado: "Asignado",
-  },
-  // Agrega más tickets si es necesario
-];
+import TicketModal from '../TicketModal'; 
 
 const TicketFilterComponent = () => {
   const [filters, setFilters] = useState({
@@ -21,11 +9,66 @@ const TicketFilterComponent = () => {
     fechaInicio: '',
     fechaFin: '',
     estado: '',
-    tipo: '',
   });
 
-  const [filteredTickets, setFilteredTickets] = useState(ticketsData);
+  const [ticketsData, setTicketsData] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
 
+  const openModal = (ticketId) => {
+    setSelectedTicketId(ticketId);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedTicketId(null);
+  };
+
+  // Función para obtener los tickets con los filtros aplicados
+  const fetchTickets = async (appliedFilters = {}) => {
+    try {
+      // Construimos los parámetros de consulta con los filtros aplicados
+      const params = new URLSearchParams();
+
+      if (appliedFilters.codigoTitulo) {
+        params.append('codigoTitulo', appliedFilters.codigoTitulo.replace("TICKET000",""));
+      }
+      if (appliedFilters.fechaInicio) {
+        params.append('fechaInicio', appliedFilters.fechaInicio);
+      }
+      if (appliedFilters.fechaFin) {
+        params.append('fechaFin', appliedFilters.fechaFin);
+      }
+      if (appliedFilters.estado) {
+        params.append('estado', appliedFilters.estado);
+      }
+
+      const response = await fetch(`https://sandy-puddle-hydrangea.glitch.me/tickets?${params.toString()}`);
+      const data = await response.json();
+
+      // Formatear los datos recibidos
+      const formattedData = data.map(ticket => ({
+        codigo: `TICKET000${ticket.id}`,
+        titulo: ticket.titulo || 'No descripcion',
+        solicitante: `${ticket.nombre} ${ticket.apellido}`,
+        asignadoA: ticket.asignado || 'No asignado',
+        fechaCreacion: new Date(ticket.fecha).toLocaleDateString('es-ES'),
+        estado: ticket.estado,
+      }));
+
+      setTicketsData(formattedData);
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+    }
+  };
+
+  // Llamamos a fetchTickets al cargar el componente sin filtros
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  // Actualizar el estado de los filtros
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters({
@@ -34,36 +77,12 @@ const TicketFilterComponent = () => {
     });
   };
 
+  // Aplicar filtros y llamar al backend con los filtros
   const applyFilters = () => {
-    let filtered = ticketsData;
-
-    if (filters.codigoTitulo) {
-      filtered = filtered.filter(ticket =>
-        ticket.codigo.toLowerCase().includes(filters.codigoTitulo.toLowerCase()) ||
-        ticket.titulo.toLowerCase().includes(filters.codigoTitulo.toLowerCase())
-      );
-    }
-
-    if (filters.fechaInicio) {
-      filtered = filtered.filter(ticket =>
-        new Date(ticket.fechaCreacion) >= new Date(filters.fechaInicio)
-      );
-    }
-
-    if (filters.fechaFin) {
-      filtered = filtered.filter(ticket =>
-        new Date(ticket.fechaCreacion) <= new Date(filters.fechaFin)
-      );
-    }
-
-    if (filters.estado) {
-      filtered = filtered.filter(ticket =>
-        ticket.estado.toLowerCase().includes(filters.estado.toLowerCase())
-      );
-    }
-
-    setFilteredTickets(filtered);
+    fetchTickets(filters);
   };
+
+
 
   return (
     <div className="ticket-filter-component">
@@ -101,10 +120,10 @@ const TicketFilterComponent = () => {
           className="filter-select"
         >
           <option value="">Estado</option>
-          <option value="Creado">Creado</option>
+          <option value="Pendiente">Pendiente</option>
           <option value="En Proceso">En Proceso</option>
-          <option value="Asignado">Asignado</option>
-          <option value="Esperando">Esperando</option>
+          <option value="Finalizado">Finalizado</option>
+          <option value="Cancelado">Cancelado</option>
         </select>
         <button onClick={applyFilters} className="filter-button">
           <FaSearch />
@@ -119,7 +138,6 @@ const TicketFilterComponent = () => {
           <tr>
             <th>Código</th>
             <th>Título</th>
-            <th>Subtipo</th>
             <th>Solicitante</th>
             <th>Asignado A</th>
             <th>Fecha Creación</th>
@@ -127,19 +145,33 @@ const TicketFilterComponent = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredTickets.map((ticket, index) => (
+          {ticketsData.map((ticket, index) => (
             <tr key={index}>
-              <td>{ticket.codigo}</td>
+              <td>
+                <span
+                  style={{ cursor: 'pointer', color: 'blue' }}
+                  onClick={() => openModal(ticket.codigo.replace("TICKET000",""))} // Al hacer clic en el código, abre el modal
+                >
+                  {ticket.codigo}
+                </span>
+              </td>
               <td>{ticket.titulo}</td>
-              <td>{ticket.subtipo}</td>
               <td>{ticket.solicitante}</td>
               <td>{ticket.asignadoA}</td>
               <td>{ticket.fechaCreacion}</td>
-              <td><span className={`status-badge ${ticket.estado.toLowerCase()}`}>{ticket.estado}</span></td>
+              <td><span className={`status-badge ${ticket.estado.toLowerCase().trim()}`}>{ticket.estado}</span></td>
             </tr>
           ))}
         </tbody>
       </table>
+      {/* Modal de detalles del ticket */}
+      {selectedTicketId && (
+        <TicketModal
+          ticketId={selectedTicketId}
+          isOpen={isModalOpen}
+          closeModal={closeModal}
+        />
+      )}
     </div>
   );
 };
