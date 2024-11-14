@@ -84,8 +84,8 @@ const Dashboard = ({ username }) => {
         <MenuItem isActive={activeMenu === 'Clientes'} onClick={() => handleMenuClick('Clientes')}>
               Clientes+
         </MenuItem>
-        
-        {userInfo.rol === 'admin' && (
+
+        {userInfo.rol.toLowerCase() === 'admin' && (
           <>
             
             <MenuItem isActive={activeMenu === 'Usuarios'} onClick={() => handleMenuClick('Usuarios')}>

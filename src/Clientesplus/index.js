@@ -37,6 +37,7 @@ const Select = styled.select`
 
 const ResponseBubble = styled(ChatBubble)`
   background-color: #d1e7ff;
+  align-self: flex-end;
 `;
 
 const Button = styled.button`
@@ -164,7 +165,7 @@ const Clientes = () => {
           </ChatBubble>
         ))}
         {response && (
-          <ResponseBubble>
+          <ResponseBubble style={{ whiteSpace: 'pre-line', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>
             {response}
           </ResponseBubble>
         )}
