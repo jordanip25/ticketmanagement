@@ -6,27 +6,48 @@ import Tickets from '../Tickets';
 import Clientes from '../Clientesplus';
 import UserManagement from '../UserManagement';
 
+// Estilos para el Navbar
+const Navbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #00aaff; /* Azul celeste */
+  color: white;
+  padding: 10px 20px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+`;
+
+// Estilos para el contenedor del menú
 const MenuContainer = styled.div`
   width: 15%;
-  background-color: #a4a4a4;
+  background-color: #343a40; /* Fondo oscuro del menú */
   padding: 10px;
   border-right: 1px solid #ddd;
   height: 100%; /* Asegura que el menú ocupe toda la altura del contenedor */
-  box-sizing: border-box; /* Incluye el padding en el cálculo de la altura */
+  box-sizing: border-box;
 `;
 
 const MenuItem = styled.div`
+  display: flex; /* Para alinear ícono y texto */
+  align-items: center; /* Centrar ícono verticalmente */
   padding: 10px;
   cursor: pointer;
-  background-color: ${(props) => (props.isActive ? '#e0e0e0' : 'transparent')};
+  background-color: ${(props) => (props.isActive ? '#00aaff' : 'transparent')};
+  color: ${(props) => (props.isActive ? 'white' : '#ddd')};
   &:hover {
-    background-color: #d0d0d0;
+    background-color: #00aaff; /* Color azul celeste */
+    color: white;
+  }
+  transition: background-color 0.3s ease;
+
+  svg {
+    margin-right: 10px; /* Espaciado entre ícono y texto */
   }
 `;
 
 const DashboardContainer = styled.div`
   display: flex;
-  height: 100vh; 
+  height: 100vh;
 `;
 
 const ContentContainer = styled.div`
@@ -36,7 +57,7 @@ const ContentContainer = styled.div`
 
 const Dashboard = ({ username }) => {
   const [activeMenu, setActiveMenu] = useState('Board');
-  const [userInfo, setUserInfo] = useState({ nombre: '', apellido: '', rol: '' });
+  const [userInfo, setUserInfo] = useState({ nombre: '', apellido: '', rol: '', telefono :''});
   const navigate = useNavigate(); // Hook para redirigir
 
   const handleMenuClick = (menu) => {
@@ -51,7 +72,7 @@ const Dashboard = ({ username }) => {
         const data = await response.json();
         
         // Supone que el webhook devuelve un objeto con los campos "nombre", "apellido" y "rol"
-        setUserInfo({ nombre: data.nombre, apellido: data.apellido, rol: data.rol });
+        setUserInfo({ nombre: data.nombre, apellido: data.apellido, rol: data.rol , telefono: data.telefono});
       } catch (error) {
         console.error('Error fetching user info:', error);
       }
@@ -69,11 +90,20 @@ const Dashboard = ({ username }) => {
   };
 
   return (
+    <>
+    {/* Navbar */}
+    <Navbar>
+    <div>
+      Bienvenido {userInfo.nombre} {userInfo.apellido}
+    </div>
+    <button onClick={logout} style={{ backgroundColor: 'transparent', color: 'white', border: 'none', cursor: 'pointer' }}>
+      Cerrar Sesión
+    </button>
+  </Navbar>
+
+  {/* Contenido del Dashboard */}
     <DashboardContainer>
       <MenuContainer>
-        <MenuItem>
-          Bienvenido {userInfo.nombre} {userInfo.apellido}
-        </MenuItem>
         <MenuItem isActive={activeMenu === 'Dashboard'} onClick={() => handleMenuClick('Dashboard')}>
           Dashboard
         </MenuItem>
@@ -82,7 +112,7 @@ const Dashboard = ({ username }) => {
         </MenuItem>
 
         <MenuItem isActive={activeMenu === 'Clientes'} onClick={() => handleMenuClick('Clientes')}>
-              Clientes+
+              Clientes IA
         </MenuItem>
 
         {userInfo.rol.toLowerCase() === 'admin' && (
@@ -99,12 +129,13 @@ const Dashboard = ({ username }) => {
       </MenuContainer>
       <ContentContainer>
         {activeMenu === 'Dashboard' && <Board />}
-        {activeMenu === 'Tickets' && <Tickets />}
+        {activeMenu === 'Tickets' && <Tickets  userPhone={userInfo.telefono} />}
         {activeMenu === 'Clientes' && <Clientes/>}
-        {activeMenu === 'Usuarios' && <UserManagement/> }
+        {activeMenu === 'Usuarios' && <UserManagement /> }
         {activeMenu === 'Logout' && <div>Cerrar Sesión</div>}
       </ContentContainer>
     </DashboardContainer>
+    </>
   );
 };
 

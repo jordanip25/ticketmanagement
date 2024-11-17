@@ -3,7 +3,7 @@ import { FaSearch, FaCalendarAlt, FaFileExcel } from 'react-icons/fa';
 import './TicketFilterComponent.css'; // Archivo CSS para los estilos
 import TicketModal from '../TicketModal'; 
 
-const TicketFilterComponent = () => {
+const TicketFilterComponent = ({userPhone} ) => {
   const [filters, setFilters] = useState({
     codigoTitulo: '',
     fechaInicio: '',
@@ -14,6 +14,7 @@ const TicketFilterComponent = () => {
   const [ticketsData, setTicketsData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
+
 
   const openModal = (ticketId) => {
     setSelectedTicketId(ticketId);
@@ -66,6 +67,8 @@ const TicketFilterComponent = () => {
   // Llamamos a fetchTickets al cargar el componente sin filtros
   useEffect(() => {
     fetchTickets();
+    console.log(userPhone);
+    console.log("----");
   }, []);
 
   // Actualizar el estado de los filtros
@@ -170,6 +173,7 @@ const TicketFilterComponent = () => {
           ticketId={selectedTicketId}
           isOpen={isModalOpen}
           closeModal={closeModal}
+          userPhone={userPhone}
         />
       )}
     </div>
