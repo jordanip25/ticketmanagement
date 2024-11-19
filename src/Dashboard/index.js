@@ -15,16 +15,18 @@ const Navbar = styled.div`
   color: white;
   padding: 10px 20px;
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  height: 25px;
 `;
 
 // Estilos para el contenedor del menú
 const MenuContainer = styled.div`
   width: 15%;
-  background-color: #343a40; /* Fondo oscuro del menú */
-  padding: 10px;
+  flex: 0 0 250px;
+  overflow-y: auto;
+  background-color: #343a40;
   border-right: 1px solid #ddd;
-  height: 100%; /* Asegura que el menú ocupe toda la altura del contenedor */
   box-sizing: border-box;
+  margin: 0; 
 `;
 
 const MenuItem = styled.div`
@@ -47,12 +49,13 @@ const MenuItem = styled.div`
 
 const DashboardContainer = styled.div`
   display: flex;
-  height: 100vh;
+  flex-direction: row;
+  height: 90.5vh;
 `;
 
 const ContentContainer = styled.div`
-  flex-grow: 1;
-  padding: 10px;
+   flex: 1;
+  overflow-y: auto;
 `;
 
 const Dashboard = ({ username }) => {
@@ -100,8 +103,6 @@ const Dashboard = ({ username }) => {
       Cerrar Sesión
     </button>
   </Navbar>
-
-  {/* Contenido del Dashboard */}
     <DashboardContainer>
       <MenuContainer>
         <MenuItem isActive={activeMenu === 'Dashboard'} onClick={() => handleMenuClick('Dashboard')}>

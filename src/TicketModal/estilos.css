@@ -1,0 +1,24 @@
+.status-badge.creado {
+    background-color: #6c757d;
+  }
+  
+  .status-badge.enproceso {
+    background-color: #fff12f;
+  }
+  
+  .status-badge.asignado {
+    background-color: #757575;
+  }
+  
+  .status-badge.pendiente {
+    background-color: #757575;
+  }
+
+  .status-badge.finalizado {
+    background-color: #11c02e;
+  }
+
+  .status-badge.cancelado {
+    background-color: #c71010;
+  }
+  

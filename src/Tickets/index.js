@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaCalendarAlt, FaFileExcel } from 'react-icons/fa';
+import { FaSearch, FaCalendarAlt, FaFileExcel , FaRegFile } from 'react-icons/fa';
 import './TicketFilterComponent.css'; // Archivo CSS para los estilos
 import TicketModal from '../TicketModal'; 
+import CreateTicketModal from '../CreateTicketModal';
 
 const TicketFilterComponent = ({userPhone} ) => {
   const [filters, setFilters] = useState({
@@ -15,6 +16,10 @@ const TicketFilterComponent = ({userPhone} ) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+const handleOpenCreateModal = () => setIsCreateModalOpen(true);
+const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets()}
 
   const openModal = (ticketId) => {
     setSelectedTicketId(ticketId);
@@ -24,6 +29,7 @@ const TicketFilterComponent = ({userPhone} ) => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedTicketId(null);
+    fetchTickets();
   };
 
   // Función para obtener los tickets con los filtros aplicados
@@ -84,10 +90,11 @@ const TicketFilterComponent = ({userPhone} ) => {
   const applyFilters = () => {
     fetchTickets(filters);
   };
-
+  
 
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2rem', width: '80%', margin: '0 auto' }}>
     <div className="ticket-filter-component">
       <div className="filters">
         <input
@@ -134,6 +141,9 @@ const TicketFilterComponent = ({userPhone} ) => {
         <button className="export-button">
           <FaFileExcel /> Exportar
         </button>
+        <button className="new-button" onClick={handleOpenCreateModal}>
+        <FaRegFile /> Nuevo
+        </button>
       </div>
 
       <table className="tickets-table">
@@ -176,6 +186,12 @@ const TicketFilterComponent = ({userPhone} ) => {
           userPhone={userPhone}
         />
       )}
+      <CreateTicketModal
+  isOpen={isCreateModalOpen}
+  onClose={handleCloseCreateModal}
+  userPhone={userPhone}
+/>
+    </div>
     </div>
   );
 };

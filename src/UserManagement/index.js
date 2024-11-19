@@ -2,8 +2,23 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import md5 from 'md5';
 
+const SkeletonLoader = ({ rows = 5, cols = 6 }) => {
+    return (
+        <tbody>
+            {Array.from({ length: rows }).map((_, rowIndex) => (
+                <tr key={rowIndex}>
+                    {Array.from({ length: cols }).map((_, colIndex) => (
+                        <td key={colIndex} style={styles.skeletonCell}></td>
+                    ))}
+                </tr>
+            ))}
+        </tbody>
+    );
+};
+
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         id: '',
         username: '',
@@ -17,9 +32,16 @@ const UserManagement = () => {
 
     // Fetch users from your API
     const fetchUsers = () => {
+        setLoading(true);
         axios.get('https://sandy-puddle-hydrangea.glitch.me/allusers')
-            .then(response => setUsers(response.data))
-            .catch(error => console.error('Error fetching users:', error));
+            .then(response => {
+                setUsers(response.data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+                setLoading(false);
+            });
     };
 
     useEffect(() => {
@@ -88,22 +110,26 @@ const UserManagement = () => {
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {users.map(user => (
-                        <tr key={user.id}>
-                            <td>{user.id}</td>
-                            <td>{user.username}</td>
-                            <td>{user.telefono}</td>
-                            <td>{user.rol}</td>
-                            <td>{user.nombre}</td>
-                            <td>{user.apellido}</td>
-                            <td>
-                                <button onClick={() => setFormData(user)} style={styles.editButton}>Editar</button>
-                                <button onClick={() => deleteUser(user.id)} style={styles.deleteButton}>Eliminar</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
+                {loading ? (
+                    <SkeletonLoader rows={5} cols={7} />
+                ) : (
+                    <tbody>
+                        {users.map(user => (
+                            <tr key={user.id}>
+                                <td>{user.id}</td>
+                                <td>{user.username}</td>
+                                <td>{user.telefono}</td>
+                                <td>{user.rol}</td>
+                                <td>{user.nombre}</td>
+                                <td>{user.apellido}</td>
+                                <td>
+                                    <button onClick={() => setFormData(user)} style={styles.editButton}>Editar</button>
+                                    <button onClick={() => deleteUser(user.id)} style={styles.deleteButton}>Eliminar</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                )}
             </table>
         </div>
     );
@@ -170,7 +196,22 @@ const styles = {
     tableRow: {
         borderBottom: '1px solid #ddd',
         height: '40px'
-    }
+    },
+    skeletonCell: {
+        background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmer 1.5s infinite',
+        height: '20px',
+        borderRadius: '4px',
+    },
+    '@keyframes shimmer': {
+        from: {
+            backgroundPosition: '100% 0',
+        },
+        to: {
+            backgroundPosition: '-100% 0',
+        },
+    },
 };
 
 export default UserManagement;

@@ -1,5 +1,5 @@
-.ticket-filter-component {
-    padding: 20px;
+  .ticket-filter-component {
+    padding: 10px;
     font-family: Arial, sans-serif;
   }
   
@@ -27,7 +27,7 @@
     color: #555;
   }
   
-  .filter-button, .export-button {
+  .filter-button, .export-button, .new-button {
     padding: 8px 12px;
     background-color: #007bff;
     color: #fff;
@@ -43,9 +43,14 @@
   .export-button {
     background-color: #28a745;
   }
+
+  .new-button {
+    background-color: #1d70be;
+    color:#f8f9fa;
+  }
   
   .tickets-table {
-    width: 100%;
+    width: 95%;
     border-collapse: collapse;
   }
   
