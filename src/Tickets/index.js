@@ -172,7 +172,7 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
               <td>{ticket.solicitante}</td>
               <td>{ticket.asignadoA}</td>
               <td>{ticket.fechaCreacion}</td>
-              <td><span className={`status-badge ${ticket.estado.toLowerCase().trim()}`}>{ticket.estado}</span></td>
+              <td><span className={`status-badge ${ticket.estado.toLowerCase().replace(" ","")}`}>{ticket.estado}</span></td>
             </tr>
           ))}
         </tbody>

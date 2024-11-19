@@ -4,6 +4,8 @@
   
   .status-badge.enproceso {
     background-color: #fff12f;
+    color: #000000;
+    font-size: 11px;
   }
   
   .status-badge.asignado {

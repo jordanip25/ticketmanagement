@@ -274,7 +274,7 @@ const TicketModal = ({ ticketId, isOpen, closeModal, userPhone  }) => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'right' }}>
                 <p><strong>Estado: </strong></p>
-                <select className={`status-badge ${estado.toLowerCase().trim()}`}
+                <select className={`status-badge ${estado.toLowerCase().replace(" ","")}`}
                     value={estado}
                     onChange={handleEstadoChange}
                     style={{
