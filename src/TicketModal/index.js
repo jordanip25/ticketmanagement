@@ -63,7 +63,7 @@ const TicketModal = ({ ticketId, isOpen, closeModal, userPhone  }) => {
 
     try {
 
-        if (field === "estado" && (value === "Finalizado" || value === "Cancelado")) {
+        if (field === "estado" && (value === "Finalizado")) {
             updateTicket("fechaFin", new Date().toISOString());
             setfechaFin(new Date().toISOString());
         }
@@ -296,7 +296,7 @@ const TicketModal = ({ ticketId, isOpen, closeModal, userPhone  }) => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <p><strong>Fecha Inicio:</strong> {formatDate(ticketData.fecha)}</p>
-                <p><strong>Fecha Fin:</strong> {formatDate(fechaFin).replace("NaN-NaN-NaN","Pendiente")}</p>
+                <p><strong>Fecha Fin:</strong> {formatDate(fechaFin).replace("NaN-NaN-NaN","     ")}</p>
             </div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '10px' }}>
                 {ticketData ? ticketData.titulo : 'Título del Ticket'}
