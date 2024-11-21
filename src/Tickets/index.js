@@ -1,10 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaCalendarAlt, FaFileExcel , FaRegFile } from 'react-icons/fa';
+import { FaSearch, FaCalendarAlt, FaDownload, FaPlus, FaFileExcel , FaRegFile } from 'react-icons/fa';
 import './TicketFilterComponent.css'; // Archivo CSS para los estilos
 import TicketModal from '../TicketModal'; 
 import CreateTicketModal from '../CreateTicketModal';
+import { DataGrid } from "@mui/x-data-grid";
+import { Box, Typography } from "@mui/material";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 const TicketFilterComponent = ({userPhone} ) => {
+
+  const inputStyle = {
+    width: "170px",
+    padding: "10px",
+    fontSize: "14px",
+    border: "1px solid #ccc",
+    borderRadius: "4px",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    transition: "box-shadow 0.2s",
+  };
+
+  const inputFocusStyle = {
+    ...inputStyle,
+    borderColor: "#6200EE",
+    boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+  };
+
+
   const [filters, setFilters] = useState({
     codigoTitulo: '',
     fechaInicio: '',
@@ -12,6 +35,7 @@ const TicketFilterComponent = ({userPhone} ) => {
     estado: '',
   });
 
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [ticketsData, setTicketsData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
@@ -31,6 +55,51 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
     setSelectedTicketId(null);
     fetchTickets();
   };
+
+  const columns = [
+    {
+      field: "codigo",
+      headerName: "Código",
+      width: 150,
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Typography
+          style={{ cursor: "pointer", color: "blue" }}
+          onClick={() => openModal(params.value.replace("TICKET000", ""))} // Llama a la función para abrir el modal
+        >
+          {params.value}
+        </Typography>
+      ),
+    },
+    { field: "titulo", headerName: "Título", width: 250 , headerAlign: "center"},
+    { field: "solicitante", headerName: "Solicitante", width: 150 , headerAlign: "center"},
+    { field: "asignadoA", headerName: "Asignado A", width: 150 , headerAlign: "center" },
+    { field: "fechaCreacion", headerName: "Fecha Creación", width: 150 , headerAlign: "center" },
+    {
+      field: "estado",
+      headerName: "Estado",
+      width: 150,
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Box
+          sx={{
+            padding: "4px 8px",
+            borderRadius: "4px",
+            backgroundColor:
+              params.value === "Pendiente"
+                ? "orange"
+                : params.value === "Cancelado"
+                ? "red"
+                : "green",
+            color: "white",
+            textAlign: "center",
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    },
+  ];
 
   // Función para obtener los tickets con los filtros aplicados
   const fetchTickets = async (appliedFilters = {}) => {
@@ -56,19 +125,57 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
 
       // Formatear los datos recibidos
       const formattedData = data.map(ticket => ({
-        codigo: `TICKET000${ticket.id}`,
+        codigo: ticket.id > 9 ? `TICKET00${ticket.id}` : `TICKET000${ticket.id}`,
         titulo: ticket.titulo || 'No descripcion',
         solicitante: `${ticket.nombre} ${ticket.apellido}`,
         asignadoA: ticket.asignado || 'No asignado',
         fechaCreacion: new Date(ticket.fecha).toLocaleDateString('es-ES'),
         estado: ticket.estado,
       }));
-
+      console.log(formattedData);
       setTicketsData(formattedData);
     } catch (error) {
       console.error('Error fetching tickets:', error);
     }
   };
+
+  const handleSort = (key) => {
+    let direction = "asc";
+  
+    // Cambiar dirección si la misma columna es seleccionada nuevamente
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+  
+    // Actualizar estado del ordenamiento
+    setSortConfig({ key, direction });
+  
+    // Ordenar los datos dinámicamente
+    const sortedData = [...ticketsData].sort((a, b) => {
+      // Orden alfabético para strings
+      if (typeof a[key] === "string") {
+        const valueA = a[key].toLowerCase();
+        const valueB = b[key].toLowerCase();
+        if (valueA < valueB) return direction === "asc" ? -1 : 1;
+        if (valueA > valueB) return direction === "asc" ? 1 : -1;
+        return 0;
+      }
+  
+      // Orden numérico o de fechas
+      if (key === "fechaCreacion") {
+        const dateA = new Date(a[key].split("/").reverse().join("-"));
+        const dateB = new Date(b[key].split("/").reverse().join("-"));
+        return direction === "asc" ? dateA - dateB : dateB - dateA;
+      }
+  
+      // Default para otros casos
+      return direction === "asc" ? a[key] - b[key] : b[key] - a[key];
+    });
+  
+    // Actualizar la lista de tickets
+    setTicketsData(sortedData);
+  };
+  
 
   // Llamamos a fetchTickets al cargar el componente sin filtros
   useEffect(() => {
@@ -94,89 +201,85 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
 
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2rem', width: '80%', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2rem', width: '80%', maxWidth: '800px', margin: '0 2%' }}>
     <div className="ticket-filter-component">
-      <div className="filters">
-        <input
-          type="text"
-          name="codigoTitulo"
-          placeholder="Código / Título"
-          value={filters.codigoTitulo}
-          onChange={handleFilterChange}
-          className="filter-input"
-        />
-        <div className="date-filter">
-          <FaCalendarAlt className="icon" />
-          <input
-            type="date"
-            name="fechaInicio"
-            value={filters.fechaInicio}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="date-filter">
-          <FaCalendarAlt className="icon" />
-          <input
-            type="date"
-            name="fechaFin"
-            value={filters.fechaFin}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <select
-          name="estado"
-          value={filters.estado}
-          onChange={handleFilterChange}
-          className="filter-select"
-        >
-          <option value="">Estado</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="En Proceso">En Proceso</option>
-          <option value="Finalizado">Finalizado</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
-        <button onClick={applyFilters} className="filter-button">
-          <FaSearch />
-        </button>
-        <button className="export-button">
-          <FaFileExcel /> Exportar
-        </button>
-        <button className="new-button" onClick={handleOpenCreateModal}>
-        <FaRegFile /> Nuevo
-        </button>
+      <div className='filters'>
+      <button className="new-button" onClick={handleOpenCreateModal}>
+        <FaPlus /> Nuevo
+    </button>
       </div>
+    <div className="filters">
+      <input
+        type="text"
+        name="codigoTitulo"
+        placeholder="Código / Título"
+        value={filters.codigoTitulo}
+        onChange={handleFilterChange}
+        style={inputStyle}
+        className="filter-input"
+        onFocus={(e) => (e.target.style = inputFocusStyle)}
+        onBlur={(e) => (e.target.style = inputStyle)}
+      />
+      <div className="date-filter">
+        <FaCalendarAlt className="icon" />
+        <DatePicker
+          selected={filters.fechaInicio}
+          onChange={(date) => handleFilterChange({ target: { name: "fechaInicio", value: date } })}
+          dateFormat="dd/MM/yyyy"
+          placeholderText="Fecha Inicio"
+          customInput={
+            <input
+              type="text"
+              style={inputStyle}
+              onFocus={(e) => (e.target.style = inputFocusStyle)}
+              onBlur={(e) => (e.target.style = inputStyle)}
+            />
+          }
+        />
+      </div>
+      <div className="date-filter">
+        <FaCalendarAlt className="icon" />
+        <DatePicker
+          selected={filters.fechaFin}
+          onChange={(date) => handleFilterChange({ target: { name: "fechaFin", value: date } })}
+          dateFormat="dd/MM/yyyy"
+          placeholderText="Fecha Fin"
+          customInput={
+            <input
+              type="text"
+              style={inputStyle}
+              onFocus={(e) => (e.target.style = inputFocusStyle)}
+              onBlur={(e) => (e.target.style = inputStyle)}
+            />
+          }
+        />
+      </div>
+  <select
+    name="estado"
+    value={filters.estado}
+    onChange={handleFilterChange}
+    className="filter-select"
+    style={{
+      ...inputStyle,
+      padding: "10px",
+      fontSize: "14px",
+      cursor: "pointer",
+    }}
+  >
+    <option value="">Estado</option>
+    <option value="Pendiente">Pendiente</option>
+    <option value="En Proceso">En Proceso</option>
+    <option value="Finalizado">Finalizado</option>
+    <option value="Cancelado">Cancelado</option>
+    </select>
+    <button onClick={applyFilters} className="filter-button">
+        <FaSearch /> Buscar
+    </button>
+    </div>
 
-      <table className="tickets-table">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Título</th>
-            <th>Solicitante</th>
-            <th>Asignado A</th>
-            <th>Fecha Creación</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ticketsData.map((ticket, index) => (
-            <tr key={index}>
-              <td>
-                <span
-                  style={{ cursor: 'pointer', color: 'blue' }}
-                  onClick={() => openModal(ticket.codigo.replace("TICKET000",""))} // Al hacer clic en el código, abre el modal
-                >
-                  {ticket.codigo}
-                </span>
-              </td>
-              <td>{ticket.titulo}</td>
-              <td>{ticket.solicitante}</td>
-              <td>{ticket.asignadoA}</td>
-              <td>{ticket.fechaCreacion}</td>
-              <td><span className={`status-badge ${ticket.estado.toLowerCase().replace(" ","")}`}>{ticket.estado}</span></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <Box style={{ maxHeight: 100, width: 1000 }}>
+      <DataGrid rows={ticketsData} columns={columns} getRowId={(row) => row.codigo} pageSize={5} disableSelectionOnClick />
+    </Box>
       {/* Modal de detalles del ticket */}
       {selectedTicketId && (
         <TicketModal

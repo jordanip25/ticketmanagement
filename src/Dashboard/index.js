@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'; // Usamos useHistory para la red
 import styled from 'styled-components';
 import Board from '../Board';
 import Tickets from '../Tickets';
-import Clientes from '../Clientesplus';
+import Clientes from '../Clientes';
 import UserManagement from '../UserManagement';
 
 // Estilos para el Navbar
@@ -113,7 +113,7 @@ const Dashboard = ({ username }) => {
         </MenuItem>
 
         <MenuItem isActive={activeMenu === 'Clientes'} onClick={() => handleMenuClick('Clientes')}>
-              Clientes IA
+              Clientes
         </MenuItem>
 
         {userInfo.rol.toLowerCase() === 'admin' && (

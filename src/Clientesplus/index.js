@@ -1,178 +1,194 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-
-const Container = styled.div`
-  display: flex;
-  justify-content: center;
-  width: 80%;
-  margin: 10px auto;
-  background-color: #f0f0f0;
-  border-radius: 10px;
-  padding: 10px;
-  flex-direction: column;
-`;
-
-const ChatBubble = styled.div`
-  background-color: #dcf8c6;
-  padding: 10px;
-  border-radius: 15px;
-  margin: 5px 0;
-  width: fit-content;
-  max-width: 80%;
-`;
-
-const MessageContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-`;
-
-const Select = styled.select`
-  margin-bottom: 15px;
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-  width: 100%;
-`;
-
-const ResponseBubble = styled(ChatBubble)`
-  background-color: #d1e7ff;
-  align-self: flex-end;
-`;
-
-const Button = styled.button`
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px;
-  cursor: pointer;
-  margin-top: 15px;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
+import React, { useEffect, useState } from "react";
+import { FaPlus, FaEye, FaSearch, FaDownload } from "react-icons/fa";
 
 const Clientes = () => {
   const [clients, setClients] = useState([]);
-  const [selectedClient, setSelectedClient] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [response, setResponse] = useState('');
-  const [error, setError] = useState(null);
+  const [filteredClients, setFilteredClients] = useState([]);
+  const [filters, setFilters] = useState({
+    nombres: "",
+    apellidos: "",
+    numero: "",
+  });
 
+  // Fetch data from the API
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const response = await fetch('https://sandy-puddle-hydrangea.glitch.me/users');
+        const response = await fetch("https://sandy-puddle-hydrangea.glitch.me/users");
         const data = await response.json();
-        setClients(data.names);
+        setClients(data);
+        setFilteredClients(data); // Initialize filtered clients
       } catch (error) {
-        console.error('Error fetching clients:', error);
+        console.error("Error fetching clients:", error);
       }
     };
 
     fetchClients();
   }, []);
 
-  useEffect(() => {
-    const fetchMessages = async (query) => {
-      if (!query) return;
-      try {
-        const response = await fetch('https://sandy-puddle-hydrangea.glitch.me/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ query })
-        });
-  
-        if (!response.ok) {
-          throw new Error('No se encontraron resultados o hubo un error en el servidor');
-        }
-  
-        const data = await response.json();
-        setMessages(data);
-  
-      } catch (error) {
-        setError(error.message);
-        setMessages([]);
-      }
-    };
+  // Handle filter changes
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
 
-    fetchMessages(selectedClient);
-  }, [selectedClient]);
-
-  const handleClientChange = (e) => {
-    setSelectedClient(e.target.value);
-    setMessages([]);
-    setResponse('');
-  };
-
-  const formatFecha = (fecha) => {
-    const date = new Date(fecha);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  const handleConcatenateAndSend = async () => {
-    const concatenatedQueries = messages.map(msg => msg.consulta).join(' ');
-    
-    try {
-      const response = await fetch('https://sandy-puddle-hydrangea.glitch.me/resume', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ concatenatedQueries })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Error en el servidor al procesar la solicitud');
-      }
-
-      const data = await response.json();
-      setResponse(data.response); // Mostrar la respuesta en el contenedor derecho
-
-    } catch (error) {
-      setError(error.message);
-    }
+    // Filter the clients based on the inputs
+    const newFilteredClients = clients.filter((client) =>
+      Object.keys(filters).every((key) =>
+        client[key]?.toLowerCase().includes(value.toLowerCase())
+      )
+    );
+    setFilteredClients(newFilteredClients);
   };
 
   return (
-    <Container>
-      <Select onChange={handleClientChange} value={selectedClient}>
-        <option value="">Seleccione un cliente</option>
-        {clients.map((client, index) => (
-          <option key={index} value={client}>
-            {client}
-          </option>
-        ))}
-      </Select>
-      <MessageContainer>
-        {messages.map((msg, index) => (
-          <ChatBubble key={index}>
-            <b>TICKET000{msg.id} - {formatFecha(msg.fecha)}</b>
-            <br/>
-            {msg.consulta}
-            <br />
-          </ChatBubble>
-        ))}
-        {response && (
-          <ResponseBubble style={{ whiteSpace: 'pre-line', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>
-            {response}
-          </ResponseBubble>
-        )}
-        <Button onClick={handleConcatenateAndSend}>Enviar consultas</Button>
-      </MessageContainer>
-    </Container>
+    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      {/* Header Buttons */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
+        <button
+          style={{
+            padding: "10px 15px",
+            backgroundColor: "#6200EE",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+          }}
+        >
+          <FaPlus /> Agregar cliente
+        </button>
+        <button
+          style={{
+            padding: "10px 15px",
+            backgroundColor: "#A7F3D0",
+            color: "#000",
+            border: "none",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+          }}
+        >
+          <FaDownload /> Descargar
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
+        <input
+          type="text"
+          name="nombres"
+          placeholder="Nombres"
+          value={filters.nombres}
+          onChange={handleFilterChange}
+          style={{
+            padding: "10px",
+            width: "150px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        />
+        <input
+          type="text"
+          name="apellidos"
+          placeholder="Apellidos"
+          value={filters.apellidos}
+          onChange={handleFilterChange}
+          style={{
+            padding: "10px",
+            width: "150px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        />
+        <input
+          type="text"
+          name="numero"
+          placeholder="Número"
+          value={filters.numero}
+          onChange={handleFilterChange}
+          style={{
+            padding: "10px",
+            width: "150px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        />
+        <button
+          style={{
+            padding: "10px 15px",
+            backgroundColor: "#3B82F6",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+          }}
+        >
+          <FaSearch /> Buscar
+        </button>
+      </div>
+
+      {/* Table */}
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <thead style={{ backgroundColor: "#F3F4F6" }}>
+          <tr>
+            <th style={headerStyle}>Nombres</th>
+            <th style={headerStyle}>Apellidos</th>
+            <th style={headerStyle}>Número</th>
+            <th style={headerStyle}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredClients.map((client, index) => (
+            <tr key={index} style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <td style={cellStyle}>{client.nombres}</td>
+              <td style={cellStyle}>{client.apellidos}</td>
+              <td style={cellStyle}>{client.numero}</td>
+              <td style={{ textAlign: "center", padding: "10px" }}>
+                <button
+                  style={{
+                    padding: "6px 10px",
+                    backgroundColor: "#E5E7EB",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <FaEye />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
-export default Clientes; 
+const headerStyle = {
+  padding: "10px",
+  textAlign: "left",
+  color: "#6B7280",
+  fontWeight: "bold",
+  textTransform: "uppercase",
+  fontSize: "12px",
+};
+
+const cellStyle = {
+  padding: "10px",
+  textAlign: "left",
+};
+
+export default Clientes;
