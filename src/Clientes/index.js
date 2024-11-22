@@ -147,8 +147,9 @@ const Clientes = () => {
   };
 
   const handleConcatenateAndSend = async () => {
-    const concatenatedQueries = messages.map(msg => msg.consulta).join(' ');
-    
+    console.log(tickets);
+    const concatenatedQueries = tickets.map(ticket => ticket.consulta).join(' ');
+    console.log(concatenatedQueries);
     try {
       const response = await fetch('https://sandy-puddle-hydrangea.glitch.me/resume', {
         method: 'POST',
@@ -463,7 +464,6 @@ const Clientes = () => {
           alignItems: "center",
           justifyContent: "center",
           border: "1px solid #ddd",
-          padding: "20px",
           borderRadius: "5px",
           maxHeight: "280px",
           maxWidth: "600px",
@@ -485,11 +485,15 @@ const Clientes = () => {
         >
           Sugerencia IA
         </button>
+        <div style={{backgroundColor: "#d1e7ff",  alignSelf: "flex-end"}} >
         {response && (
-          <p style={{ whiteSpace: 'pre-line', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>
+          <div readonly style={{ overflowY: "auto", // Habilitar desplazamiento interno si es necesario
+            maxHeight: "200px", // Limitar altura máxima para mantener diseño limpio
+            width: "100%",  whiteSpace: 'pre-line', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>
             {response}
-          </p>
+          </div>
         )}
+        </div>
       </div>
     </div>
   </div>
