@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaCalendarAlt, FaDownload, FaPlus, FaFileExcel , FaRegFile } from 'react-icons/fa';
+import { FaSearch, FaEye, FaCalendarAlt, FaDownload, FaPlus, FaFileExcel , FaRegFile } from 'react-icons/fa';
 import './TicketFilterComponent.css'; // Archivo CSS para los estilos
 import TicketModal from '../TicketModal'; 
 import CreateTicketModal from '../CreateTicketModal';
@@ -12,7 +12,7 @@ import "react-datepicker/dist/react-datepicker.css";
 const TicketFilterComponent = ({userPhone} ) => {
 
   const inputStyle = {
-    width: "170px",
+    width: "150px",
     padding: "10px",
     fontSize: "14px",
     border: "1px solid #ccc",
@@ -56,11 +56,15 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
     fetchTickets();
   };
 
+  const handleViewTicket = (ticket) => {
+    openModal(ticket);
+  };
+
   const columns = [
     {
       field: "codigo",
       headerName: "Código",
-      width: 150,
+      width: 120,
       headerAlign: "center",
       renderCell: (params) => (
         <Typography
@@ -71,10 +75,10 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
         </Typography>
       ),
     },
-    { field: "titulo", headerName: "Título", width: 250 , headerAlign: "center"},
-    { field: "solicitante", headerName: "Solicitante", width: 150 , headerAlign: "center"},
-    { field: "asignadoA", headerName: "Asignado A", width: 150 , headerAlign: "center" },
-    { field: "fechaCreacion", headerName: "Fecha Creación", width: 150 , headerAlign: "center" },
+    { field: "titulo", headerName: "Título", width: 220 , headerAlign: "center"},
+    { field: "solicitante", headerName: "Solicitante", width: 140 , headerAlign: "center"},
+    { field: "asignadoA", headerName: "Asignado A", width: 140 , headerAlign: "center" },
+    { field: "fechaCreacion", headerName: "Fecha Creación", width: 140 , headerAlign: "center" },
     {
       field: "estado",
       headerName: "Estado",
@@ -97,6 +101,31 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
         >
           {params.value}
         </Box>
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Acciones",
+      width: 85,
+      headerAlign: "center",
+      renderCell: (params) => (
+        <button
+            onClick={() => {
+              handleViewTicket(params.row.codigo.replace("TICKET000", ""));
+            }}
+          style={{
+            padding: "6px 10px",
+            backgroundColor: "#E5E7EB",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            display: "flex", // Asegura un contenedor flexible
+            alignItems: "center", // Centra verticalmente
+            justifyContent: "center", // Centra horizontalmente
+          }}
+        >
+          <FaEye />
+        </button>
       ),
     },
   ];
@@ -278,7 +307,14 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
     </div>
 
     <Box style={{ maxHeight: 100, width: 1000 }}>
-      <DataGrid rows={ticketsData} columns={columns} getRowId={(row) => row.codigo} pageSize={5} disableSelectionOnClick />
+      <DataGrid rows={ticketsData} columns={columns} getRowId={(row) => row.codigo} pageSize={5} disableSelectionOnClick sx={{
+            boxShadow: 2,
+            border: 1,
+            borderColor: "divider",
+            "& .MuiDataGrid-cell:hover": {
+              color: "primary.main",
+            },
+          }} />
     </Box>
       {/* Modal de detalles del ticket */}
       {selectedTicketId && (

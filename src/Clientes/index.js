@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import { FaPlus, FaSearch, FaDownload, FaEye} from "react-icons/fa";
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from "@mui/material";
+import { FaPlus, FaSearch, FaDownload, FaEye , FaBookmark} from "react-icons/fa";
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button  } from "@mui/material";
 
 const Clientes = () => {
   const [clients, setClients] = useState([]);
@@ -16,6 +16,15 @@ const Clientes = () => {
     apellido: "",
     telefono: "",
   });
+
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null); 
+  const [tickets, setTickets] = useState([]); // Tickets asociados
+  const [loading, setLoading] = useState(false); // Indicador de carga
+
+  const [messages, setMessages] = useState([]);
+  const [response, setResponse] = useState('');
+  const [error, setError] = useState(null);
 
   const inputStyle = {
     width: "170px",
@@ -41,6 +50,7 @@ const Clientes = () => {
         const response = await fetch("https://sandy-puddle-hydrangea.glitch.me/clients");
         const data = await response.json();
         setClients(data);
+        setResponse(null);
       } catch (error) {
         console.error("Error fetching clients:", error);
       }
@@ -56,6 +66,41 @@ const Clientes = () => {
       setClients(data);
     } catch (error) {
       console.error("Error fetching clients:", error);
+    }
+  };
+
+  const handleViewClient = (client) => {
+    const fullName = `${client.nombre} ${client.apellido}`; // Concatenar nombre y apellido
+    setSelectedClient(client); // Seleccionar cliente
+    setViewModalOpen(true); // Abrir modal
+    fetchTickets(fullName); // Obtener tickets del cliente
+  };
+
+  const fetchTickets = async (fullName) => {
+    setLoading(true);
+    try {
+      const response = await fetch("https://sandy-puddle-hydrangea.glitch.me/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: fullName }), // Consulta por nombre completo
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data); // Guarda los tickets en el estado
+        setResponse(null);
+      } else {
+        const errorData = await response.json();
+        console.error("Error al obtener los tickets:", errorData.message);
+        setTickets([]); // Vacía los tickets si no hay resultados
+      }
+    } catch (error) {
+      console.error("Error al realizar la solicitud:", error);
+      setTickets([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,6 +146,30 @@ const Clientes = () => {
     }
   };
 
+  const handleConcatenateAndSend = async () => {
+    const concatenatedQueries = messages.map(msg => msg.consulta).join(' ');
+    
+    try {
+      const response = await fetch('https://sandy-puddle-hydrangea.glitch.me/resume', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ concatenatedQueries })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error en el servidor al procesar la solicitud');
+      }
+
+      const data = await response.json();
+      setResponse(data.response); // Mostrar la respuesta en el contenedor derecho
+
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   // Columns for DataGrid
   const columns = [
     { field: "id", headerName: "ID", width: 90 },
@@ -113,6 +182,9 @@ const Clientes = () => {
       width: 120,
       renderCell: (params) => (
         <button
+            onClick={() => {
+                handleViewClient(params.row)
+            }}
           style={{
             padding: "6px 10px",
             backgroundColor: "#E5E7EB",
@@ -233,7 +305,7 @@ const Clientes = () => {
       </div>
     
       {/* Modal for Adding Client */}
-      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Dialog  open={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <DialogTitle>
           Agregar Cliente
           <button
@@ -285,6 +357,149 @@ const Clientes = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal de detalles */}
+      <Dialog 
+         maxWidth="lg" // Cambia el ancho máximo. Opciones: 'xs', 'sm', 'md', 'lg', 'xl'.
+         fullWidth open={viewModalOpen} onClose={() => {setViewModalOpen(false); setResponse(null);}}>
+        <DialogTitle>
+            Información del Cliente
+            <button
+            onClick={() => setViewModalOpen(false)}
+            style={{
+                float: "right",
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: "18px",
+            }}
+            >
+            &times;
+            </button>
+        </DialogTitle>
+        <DialogContent >
+        {selectedClient ? (
+  <div>
+    <div style={{ overflow: "hidden" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+          padding: "10px",
+          overflow: "hidden",
+        }}
+      >
+        <p style={{ margin: 0 }}>
+          <strong>Cliente:</strong> {selectedClient.nombre} {selectedClient.apellido}
+        </p>
+        <p style={{ margin: 0 }}>
+          <strong>Número:</strong> {selectedClient.telefono}
+        </p>
+      </div>
+    </div>
+
+    {/* Contenedor de dos columnas */}
+    <div
+      style={{
+        display: "flex",
+        gap: "20px", // Espaciado entre las columnas
+        marginTop: "20px",
+      }}
+    >
+      {/* Columna izquierda: Tickets */}
+      <div
+        style={{
+          flex: 3, // Esta columna ocupará más espacio
+          maxHeight: "300px",
+          maxWidth: "600px",
+          overflowY: "scroll",
+          border: "1px solid #ddd",
+          padding: "10px",
+          borderRadius: "5px",
+        }}
+      >
+        {loading ? (
+          <p>Cargando tickets...</p>
+        ) : tickets.length > 0 ? (
+          <div>
+            {tickets.map((ticket) => (
+              <div
+                key={ticket.id}
+                style={{
+                  display: "inline-block",
+                  border: "1px solid #eee",
+                  boxShadow: "0 2px 2px #ccc",
+                  width: "250px",
+                  padding: "10px",
+                  margin: "5px",
+                }}
+              >
+                <FaBookmark />
+                <h2>{ticket.titulo ? ticket.titulo : "Sin descripción"}</h2>
+                <p>
+                  <strong>
+                    {ticket.id > 9 ? `TICKET00${ticket.id}` : `TICKET000${ticket.id}`}
+                  </strong>
+                </p>
+                <p>
+                  <strong>Descripción:</strong> {ticket.consulta}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No hay tickets disponibles.</p>
+        )}
+      </div>
+
+      {/* Columna derecha: Botón de Sugerencia IA */}
+      <div
+        style={{
+          flex: 1, // Esta columna ocupará menos espacio
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "1px solid #ddd",
+          padding: "20px",
+          borderRadius: "5px",
+          maxHeight: "280px",
+          maxWidth: "600px",
+          overflowY: "scroll",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <button
+          style={{
+            padding: "10px 20px",
+            backgroundColor: loading ? "#d1d5db" : "#3B82F6", 
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
+          disabled={loading}
+          onClick={() => handleConcatenateAndSend()}
+        >
+          Sugerencia IA
+        </button>
+        {response && (
+          <p style={{ whiteSpace: 'pre-line', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>
+            {response}
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+) : (
+  <p>No se encontró información del cliente.</p>
+)}
+
+        </DialogContent>
+        </Dialog>
+
     </div>
   );
 };
