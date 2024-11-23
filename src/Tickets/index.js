@@ -57,6 +57,8 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
   };
 
   const handleViewTicket = (ticket) => {
+    console.log(ticket);
+    console.log("ticket");
     openModal(ticket);
   };
 
@@ -69,7 +71,7 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
       renderCell: (params) => (
         <Typography
           style={{ cursor: "pointer", color: "blue" }}
-          onClick={() => openModal(params.value.replace("TICKET000", ""))} // Llama a la función para abrir el modal
+          onClick={() => openModal(params.value.replace("TICKET000", "").replace("TICKET00", ""))} // Llama a la función para abrir el modal
         >
           {params.value}
         </Typography>
@@ -111,7 +113,7 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
       renderCell: (params) => (
         <button
             onClick={() => {
-              handleViewTicket(params.row.codigo.replace("TICKET000", ""));
+              handleViewTicket(params.row.codigo.replace("TICKET000", "").replace("TICKET00", ""));
             }}
           style={{
             padding: "6px 10px",
