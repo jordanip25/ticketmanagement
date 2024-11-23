@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { FaPlus, FaSearch, FaDownload, FaEye , FaBookmark} from "react-icons/fa";
 import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button  } from "@mui/material";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 const Clientes = () => {
   const [clients, setClients] = useState([]);
@@ -380,7 +382,7 @@ const Clientes = () => {
         </DialogTitle>
         <DialogContent >
         {selectedClient ? (
-  <div>
+    <div>
     <div style={{ overflow: "hidden" }}>
       <div
         style={{
@@ -422,7 +424,23 @@ const Clientes = () => {
         }}
       >
         {loading ? (
-          <p>Cargando tickets...</p>
+           <div>
+           {[...Array(5)].map((_, index) => (
+             <div
+               key={index}
+               style={{
+                 display: "flex",
+                 flexDirection: "column",
+                 gap: "10px",
+                 marginBottom: "10px",
+               }}
+             >
+               <Skeleton height={20} width="80%" />
+               <Skeleton height={15} width="60%" />
+               <Skeleton height={15} width="90%" />
+             </div>
+           ))}
+         </div>
         ) : tickets.length > 0 ? (
           <div>
             {tickets.map((ticket) => (

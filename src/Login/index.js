@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import axios from 'axios';
 import md5 from 'md5';
 import { useNavigate } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
 const LoginContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -57,26 +59,20 @@ const Input = styled.input`
 `;
 
 const PasswordContainer = styled.div`
-  display: flex;
-  align-items: center;
-  width: 100%;
-  justify-content: space-between;
-  margin: 0.5em 0;
+  position: relative;
+  width: 100%; /* Asegura el mismo ancho para ambos inputs */
 `;
 
-const ForgotPassword = styled.a`
-  font-size: 0.8em;
-  color: #ffffff;
-  text-decoration: none;
-  opacity: 0.8;
+const ShowButton = styled.button`
+  position: absolute;
+  right: -15%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.2em;
   cursor: pointer;
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const ToggleSwitch = styled.input.attrs({ type: 'checkbox' })`
-  cursor: pointer;
+  color: #666;
 `;
 
 const Button = styled.button`
@@ -90,6 +86,7 @@ const Button = styled.button`
   cursor: pointer;
   margin-top: 1em;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
   &:hover {
     background-color: #e84620;
   }
@@ -97,10 +94,11 @@ const Button = styled.button`
 
 function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
-  const [pass, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate(); // Usando useNavigate en lugar de useHistory
-  
+  const [pass, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
   const handleLogin = async (e) => {
     e.preventDefault();
     const password = md5(pass);
@@ -111,8 +109,8 @@ function Login({ onLoginSuccess }) {
       });
 
       if (response.status === 200) {
-        onLoginSuccess(username); // Ejecución de la función en caso de éxito
-        navigate('/dashboard'); // Redirigir al dashboard tras login exitoso
+        onLoginSuccess(username);
+        navigate('/dashboard');
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -126,29 +124,34 @@ function Login({ onLoginSuccess }) {
   return (
     <LoginContainer>
       <Card>
-      <form onSubmit={handleLogin}>
-      <IconContainer>
-          {/* Aquí podrías agregar un ícono si tienes uno */}
-          👤
-        </IconContainer>
-        <Title>Bienvenido</Title>
-        <Input
-          type="text"
-          placeholder="Usuario"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <PasswordContainer>
-        <Input
-          type="password"
-          value={pass}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contraseña"
-        />
-        </PasswordContainer>
-        <Button type="submit">Sign in</Button>
-        {error && <p>{error}</p>}
-      </form>
+        <form onSubmit={handleLogin}>
+          <IconContainer>
+            👤
+          </IconContainer>
+          <Title>Bienvenido</Title>
+          <Input
+            type="text"
+            placeholder="Usuario"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <PasswordContainer>
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              value={pass}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <ShowButton
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </ShowButton>
+          </PasswordContainer>
+          <Button type="submit">Sign in</Button>
+          {error && <p>{error}</p>}
+        </form>
       </Card>
     </LoginContainer>
   );

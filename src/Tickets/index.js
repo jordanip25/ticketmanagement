@@ -306,31 +306,31 @@ const handleCloseCreateModal = () =>{ setIsCreateModalOpen(false); fetchTickets(
     </button>
     </div>
 
-    <Box style={{ maxHeight: 100, width: 1000 }}>
-      <DataGrid rows={ticketsData} columns={columns} getRowId={(row) => row.codigo} pageSize={5} disableSelectionOnClick sx={{
+      <Box style={{ maxHeight: 100, width: 1000 }}>
+        <DataGrid rows={ticketsData} columns={columns} getRowId={(row) => row.codigo} pageSize={5} disableSelectionOnClick sx={{
             boxShadow: 2,
             border: 1,
             borderColor: "divider",
             "& .MuiDataGrid-cell:hover": {
               color: "primary.main",
             },
-          }} />
-    </Box>
-      {/* Modal de detalles del ticket */}
-      {selectedTicketId && (
-        <TicketModal
-          ticketId={selectedTicketId}
-          isOpen={isModalOpen}
-          closeModal={closeModal}
+        }} />
+      </Box>
+        {/* Modal de detalles del ticket */}
+        {selectedTicketId && (
+          <TicketModal
+            ticketId={selectedTicketId}
+            isOpen={isModalOpen}
+            closeModal={closeModal}
+            userPhone={userPhone}
+          />
+        )}
+        <CreateTicketModal
+          isOpen={isCreateModalOpen}
+          onClose={handleCloseCreateModal}
           userPhone={userPhone}
         />
-      )}
-      <CreateTicketModal
-  isOpen={isCreateModalOpen}
-  onClose={handleCloseCreateModal}
-  userPhone={userPhone}
-/>
-    </div>
+      </div>
     </div>
   );
 };
