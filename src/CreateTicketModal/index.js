@@ -11,6 +11,8 @@ const CreateTicketModal = ({ isOpen, onClose , userPhone}) => {
   const [asignado, setAsignado] = useState('');
   const [descripcion, setDescripcion] = useState("");
   const [users, setUsers] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [solicitado, setSolicitado] = useState('');
 
 
   const handleDescripcionChange = (e) => {
@@ -25,6 +27,10 @@ const CreateTicketModal = ({ isOpen, onClose , userPhone}) => {
     setAsignado(e.target.value);
   };
 
+  const handleSolicitadoChange = (e) => {
+    setSolicitado(e.target.value);
+  };
+
 
   const handleCreate = async () => {
     if (isSubmitting) return; // Evita múltiples clics
@@ -32,9 +38,10 @@ const CreateTicketModal = ({ isOpen, onClose , userPhone}) => {
     setIsSubmitting(true);
 
     try {
+      const [nombre, apellido] = solicitado.split(' ');
         const payload = {
-            nombre: author.nombre, 
-            apellido: author.apellido, 
+            nombre: nombre, 
+            apellido: apellido, 
             tipo: tipo, 
             consulta: descripcion, 
             telefono: userPhone, 
@@ -71,11 +78,28 @@ const CreateTicketModal = ({ isOpen, onClose , userPhone}) => {
           const data = await response.json();
           setUsers(data);
           setTipo("Incidencia");
+          setDescripcion("");
         } catch (error) {
           console.error("Error al cargar los usuarios:", error);
         }
       };
       fetchUsers();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchClients = async () => {
+        try {
+          const response = await fetch(`https://sandy-puddle-hydrangea.glitch.me/allclients`);
+          const data = await response.json();
+          setClients(data);
+          setTipo("Clientes");
+        } catch (error) {
+          console.error("Error al cargar los usuarios:", error);
+        }
+      };
+      fetchClients();
     }
   }, [isOpen]);
 
@@ -160,6 +184,29 @@ const CreateTicketModal = ({ isOpen, onClose , userPhone}) => {
                 {users.map((user) => (
                     <option key={user.id} value={`${user.nombre} ${user.apellido}`}>
                     {`${user.nombre} ${user.apellido}`}
+                    </option>
+                ))}
+                </select>
+            </div>
+        </div>
+        <div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <p><strong>Solicitado por: </strong></p>
+                <select
+                value={solicitado}
+                onChange={handleSolicitadoChange}
+                style={{
+                    color: '#141dc4',
+                    fontWeight: 'bold',
+                    border: '1px solid #141dc4',
+                    borderRadius: '5px',
+                    padding: '2px 8px',
+                }}
+                >
+                <option value="Sin Asignar">Sin Asignar</option>
+                {clients.map((client) => (
+                    <option key={client.id} value={`${client.nombre} ${client.apellido}`}>
+                    {`${client.nombre} ${client.apellido}`}
                     </option>
                 ))}
                 </select>
