@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import md5 from 'md5';
+import { DataGrid } from '@mui/x-data-grid';
+import { Skeleton } from '@mui/material';
 
 const SkeletonLoader = ({ rows = 5, cols = 6 }) => {
     return (
@@ -82,12 +84,42 @@ const UserManagement = () => {
             .catch(error => console.error('Error deleting user:', error));
     };
 
+    const columns = [
+        { field: 'id', headerName: 'ID', width: 60 },
+        { field: 'username', headerName: 'Username', width: 150 },
+        { field: 'telefono', headerName: 'Número', width: 150 },
+        { field: 'rol', headerName: 'Rol', width: 80 },
+        { field: 'nombre', headerName: 'Nombre', width: 150 },
+        { field: 'apellido', headerName: 'Apellido', width: 150 },
+        {
+            field: 'acciones',
+            headerName: 'Acciones',
+            width: 150,
+            renderCell: (params) => (
+                <>
+                    <button
+                        onClick={() => setFormData(params.row)}
+                        style={styles.editButton}
+                    >
+                        Editar
+                    </button>
+                    <button
+                        onClick={() => deleteUser(params.row.id)}
+                        style={styles.deleteButton}
+                    >
+                        Eliminar
+                    </button>
+                </>
+            ),
+        },
+    ];
+
     return (
         <div style={styles.container}>
             <h2 style={styles.title}>Gestión de Usuarios</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
                 <input name="username" value={formData.username} onChange={handleChange} placeholder="Username" required style={styles.input} />
-                <input name="password" value={formData.password}  onFocus={() => setFormData({ ...formData, password: '' })} onChange={handleChange} placeholder="Password" required type="password" style={styles.input} />
+                <input name="password" value={formData.password} onFocus={() => setFormData({ ...formData, password: '' })} onChange={handleChange} placeholder="Password" required type="password" style={styles.input} />
                 <input name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Número" required style={styles.input} />
                 <select name="rol" value={formData.rol} onChange={handleChange} required style={styles.input}>
                     <option value="Admin">Admin</option>
@@ -98,46 +130,30 @@ const UserManagement = () => {
                 <button type="submit" style={styles.button}>{formData.id ? "Actualizar" : "Agregar"}</button>
             </form>
 
-            <table style={styles.table}>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Número</th>
-                        <th>Rol</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
+            <div style={{ height: 400, width: '100%' }}>
                 {loading ? (
-                    <SkeletonLoader rows={5} cols={7} />
-                ) : (
-                    <tbody>
-                        {users.map(user => (
-                            <tr key={user.id}>
-                                <td>{user.id}</td>
-                                <td>{user.username}</td>
-                                <td>{user.telefono}</td>
-                                <td>{user.rol}</td>
-                                <td>{user.nombre}</td>
-                                <td>{user.apellido}</td>
-                                <td>
-                                    <button onClick={() => setFormData(user)} style={styles.editButton}>Editar</button>
-                                    <button onClick={() => deleteUser(user.id)} style={styles.deleteButton}>Eliminar</button>
-                                </td>
-                            </tr>
+                    <div>
+                        {[...Array(5)].map((_, index) => (
+                            <Skeleton key={index} variant="rectangular" height={40} style={{ marginBottom: 8 }} />
                         ))}
-                    </tbody>
+                    </div>
+                ) : (
+                    <DataGrid
+                        rows={users}
+                        columns={columns}
+                        pageSize={5}
+                        rowsPerPageOptions={[5, 10, 20]}
+                        style={styles.table}
+                    />
                 )}
-            </table>
+            </div>
         </div>
     );
 };
 
 const styles = {
     container: {
-        maxWidth: '800px',
+        maxWidth: '900px',
         margin: '0 auto',
         padding: '20px',
         fontFamily: 'Arial, sans-serif',
