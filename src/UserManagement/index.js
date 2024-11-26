@@ -1,26 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import md5 from 'md5';
+//import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button  } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
 import { Skeleton } from '@mui/material';
+import "./modal.css";
 
-const SkeletonLoader = ({ rows = 5, cols = 6 }) => {
-    return (
-        <tbody>
-            {Array.from({ length: rows }).map((_, rowIndex) => (
-                <tr key={rowIndex}>
-                    {Array.from({ length: cols }).map((_, colIndex) => (
-                        <td key={colIndex} style={styles.skeletonCell}></td>
-                    ))}
-                </tr>
-            ))}
-        </tbody>
-    );
-};
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [userSelected, setUserSelected] = useState('');
+    const [response, setResponse] = useState('');
     const [formData, setFormData] = useState({
         id: '',
         username: '',
@@ -32,6 +23,9 @@ const UserManagement = () => {
         apellido: ''
     });
 
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     // Fetch users from your API
     const fetchUsers = () => {
         setLoading(true);
@@ -39,6 +33,7 @@ const UserManagement = () => {
             .then(response => {
                 setUsers(response.data);
                 setLoading(false);
+                setUserSelected('');
             })
             .catch(error => {
                 console.error('Error fetching users:', error);
@@ -77,6 +72,52 @@ const UserManagement = () => {
         setFormData({ id: '', username: '', password: '', telefono: '', created_at: '', rol: '', nombre: '', apellido: '' });
     };
 
+    const handleConcatenateAndSend = async () => {
+        if (!feedbacks || feedbacks.length === 0) {
+            console.error('No hay datos para procesar.');
+            return;
+        }
+    
+        // Concatenar preguntas y respuestas
+        const concatenatedQueries = feedbacks.map(feedback => {
+            return `
+            1. ¿Cómo calificarías la atención del técnico? 
+               Respuesta: ${feedback.pregunta1 || "Sin respuesta"}
+            2. ¿El problema fue resuelto de manera efectiva? 
+               Respuesta: ${feedback.pregunta2 || "Sin respuesta"}
+            3. ¿Estás satisfecho con el tiempo de respuesta? 
+               Respuesta: ${feedback.pregunta3 || "Sin respuesta"}
+            4. ¿Recomendarías nuestro servicio? 
+               Respuesta: ${feedback.pregunta4 || "Sin respuesta"}
+            5. Dame un pequeño feedback, por favor. 
+               Respuesta: ${feedback.pregunta5 || "Sin respuesta"}
+            `;
+        }).join('\n');
+    
+        console.log('Concatenated Queries:', concatenatedQueries);
+    
+        // Enviar al backend
+        try {
+            const response = await fetch('https://sandy-puddle-hydrangea.glitch.me/resumefeedbacks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ concatenatedQueries })
+            });
+    
+            if (!response.ok) {
+                throw new Error('Error en el servidor al procesar la solicitud');
+            }
+    
+            const data = await response.json();
+            setResponse(data.response); // Mostrar la respuesta en el contenedor derecho
+        } catch (error) {
+            console.error('Error:', error.message);
+        }
+    };
+    
+
     // Delete a user
     const deleteUser = (id) => {
         axios.delete(`https://sandy-puddle-hydrangea.glitch.me/api/users/${id}`)
@@ -84,19 +125,71 @@ const UserManagement = () => {
             .catch(error => console.error('Error deleting user:', error));
     };
 
+    const evaluateUser = (user) => {
+        setUserSelected(user);
+        axios.post('https://sandy-puddle-hydrangea.glitch.me/feedbacksbyuser', { user })
+        .then(response => {
+            // Mapeos para las respuestas
+            const mappings = {
+                pregunta1: {
+                    "1": "Muy insatisfecho",
+                    "2": "Insatisfecho",
+                    "3": "Neutro",
+                    "4": "Satisfecho",
+                    "5": "Muy satisfecho",
+                },
+                pregunta2: {
+                    "1": "Sí",
+                    "2": "No",
+                    "3": "Probablemente",
+                },
+                pregunta3: {
+                    "1": "Muy insatisfecho",
+                    "2": "Insatisfecho",
+                    "3": "Neutro",
+                    "4": "Satisfecho",
+                    "5": "Muy satisfecho",
+                },
+                pregunta4: {
+                    "1": "Sí",
+                    "2": "No",
+                },
+            };
+
+            // Transformar los datos
+            const transformedData = response.data.map(feedback => ({
+                ...feedback,
+                pregunta1: mappings.pregunta1[feedback.pregunta1.charAt(0)] || feedback.pregunta1,
+                pregunta2: mappings.pregunta2[feedback.pregunta2.charAt(0)] || feedback.pregunta2,
+                pregunta3: mappings.pregunta3[feedback.pregunta3.charAt(0)] || feedback.pregunta3,
+                pregunta4: mappings.pregunta4[feedback.pregunta4.charAt(0)] || feedback.pregunta4,
+            }));
+
+            setFeedbacks(transformedData);
+            setIsModalOpen(true); // Abrir el modal
+        })
+        .catch(error => console.error('Error fetching feedbacks:', error));
+    };
+
     const columns = [
-        { field: 'id', headerName: 'ID', width: 60 },
-        { field: 'username', headerName: 'Username', width: 150 },
+        { field: 'id', headerName: 'ID', width: 50 },
+        { field: 'username', headerName: 'Username', width: 80 },
         { field: 'telefono', headerName: 'Número', width: 150 },
         { field: 'rol', headerName: 'Rol', width: 80 },
-        { field: 'nombre', headerName: 'Nombre', width: 150 },
-        { field: 'apellido', headerName: 'Apellido', width: 150 },
+        { field: 'nombre', headerName: 'Nombre', width: 120 },
+        { field: 'apellido', headerName: 'Apellido', width: 120 },
         {
             field: 'acciones',
             headerName: 'Acciones',
-            width: 150,
+            width: 230,
             renderCell: (params) => (
                 <>
+                    <button
+                        onClick={() => evaluateUser(params.row.nombre + " "+params.row.apellido)}
+                        style={styles.evaluateButton}
+                    >
+                        Evaluar
+                    </button>
                     <button
                         onClick={() => setFormData(params.row)}
                         style={styles.editButton}
@@ -147,9 +240,127 @@ const UserManagement = () => {
                     />
                 )}
             </div>
+             {/* Modal para mostrar feedbacks */}
+             <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                <DialogTitle>
+                Feedbacks del Usuario: {userSelected}
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    style={{
+                    float: "right",
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    }}
+                >
+                    &times;
+                </button>
+                </DialogTitle>
+                <DialogContent>
+                <div className="modal-content-container">
+                    {/* Panel izquierdo: Tickets */}
+                    <div className="left-panel">
+                        {feedbacks.length > 0 ? (
+                            <div className="ticket-container-horizontal">
+                            {feedbacks.map((feedback) => (
+                                <div key={feedback.id} className="ticket-card">
+                                <h3>TICKET{feedback.ticketId.toString().padStart(4, "0")}</h3>
+                                <p>
+                                    <strong>¿Cómo calificarías la atención del técnico?</strong>
+                                    <br />
+                                    {feedback.pregunta1}
+                                </p>
+                                <p>
+                                    <strong>¿El problema fue resuelto de manera efectiva?</strong>
+                                    <br />
+                                    {feedback.pregunta2}
+                                </p>
+                                <p>
+                                    <strong>¿Estás satisfecho con el tiempo de respuesta?</strong>
+                                    <br />
+                                    {feedback.pregunta3}
+                                </p>
+                                <p>
+                                    <strong>¿Recomendarías nuestro servicio?</strong>
+                                    <br />
+                                    {feedback.pregunta4}
+                                </p>
+                                <p>
+                                    <strong>Dame un pequeño feedback, por favor</strong>
+                                    <br />
+                                    {feedback.pregunta5}
+                                </p>
+                                </div>
+                            ))}
+                            </div>
+                        ) : (
+                            <p>No se encontraron feedbacks.</p>
+                        )}
+                        </div>
+
+                    {/* Panel derecho */}
+                    <div className="right-panel">
+                    <button
+                        style={{
+                            padding: "10px 20px",
+                            backgroundColor: loading ? "#d1d5db" : "#3B82F6", 
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: loading ? "not-allowed" : "pointer",
+                        }}
+                        disabled={loading}
+                        onClick={() => handleConcatenateAndSend()}
+                        >
+                        Sugerencia IA
+                        </button>
+                        <div style={{backgroundColor: "#d1e7ff",  alignSelf: "flex-end"}} >
+                        {response && (
+        <div
+            style={{
+                overflowY: "auto", // Habilitar desplazamiento interno si es necesario
+                maxHeight: "300px", // Limitar altura máxima para mantener diseño limpio
+                width: "100%",
+                whiteSpace: "pre-line",
+                fontFamily: "Arial, sans-serif",
+                lineHeight: "1.6",
+            }}
+            dangerouslySetInnerHTML={{
+                __html: response
+                    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>") // Reemplazar **texto** con <b>texto</b>
+                    .replace(/<\/ul>\s*<ul>/g, ""), // Quitar <ul> duplicados consecutivos
+            }}
+        />
+    )}
+                        </div>
+                    </div>
+                </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
+
+
+const Dialog = ({ open, onClose, children }) => {
+    if (!open) return null;
+  
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">{children}</div>
+      </div>
+    );
+  };
+  
+  const DialogTitle = ({ children }) => (
+    <div className="modal-title">{children}</div>
+  );
+  
+  const DialogContent = ({ children }) => (
+    <div className="modal-body">{children}</div>
+  );
+
 
 const styles = {
     container: {
@@ -182,7 +393,7 @@ const styles = {
         padding: '10px',
         borderRadius: '4px',
         backgroundColor: '#4CAF50',
-        color: '#fff',
+        color: '#000',
         border: 'none',
         fontSize: '16px',
         cursor: 'pointer'
@@ -208,6 +419,15 @@ const styles = {
         color: '#fff',
         border: 'none',
         cursor: 'pointer'
+    },
+    evaluateButton: {
+        padding: '5px 10px',
+        borderRadius: '4px',
+        backgroundColor: '#43f4f4',
+        color: '#fff',
+        border: 'none',
+        cursor: 'pointer',
+         marginRight: '5px'
     },
     tableRow: {
         borderBottom: '1px solid #ddd',
