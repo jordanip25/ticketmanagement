@@ -423,7 +423,7 @@ const styles = {
     evaluateButton: {
         padding: '5px 10px',
         borderRadius: '4px',
-        backgroundColor: '#43f4f4',
+        backgroundColor: '#5E63DC',
         color: '#fff',
         border: 'none',
         cursor: 'pointer',
